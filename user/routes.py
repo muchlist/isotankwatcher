@@ -8,14 +8,26 @@ from flask_jwt_extended import (
     get_jwt_identity,
     jwt_refresh_token_required,
     jwt_required,
-    get_raw_jwt
+    get_raw_jwt,
+    get_jwt_claims,
 )
 from marshmallow import ValidationError
-from user.user_schema import UserSchema
+from user.user_schema import (
+    UserRegisterSchema,
+    UserLoginSchema,
+    UserChangePassSchema,
+    UserEditSchema
+)
 
+from datetime import timedelta
+
+
+EXPIRED_TOKEN = 15
 
 # Set up a Blueprint
 bp = Blueprint('user_bp', __name__)
+
+# apakah user eksisting
 
 
 def user_eksis(username):
@@ -24,53 +36,139 @@ def user_eksis(username):
     return result
 
 
-@bp.route('/register', methods=['POST'])
+@bp.route('/admin/register', methods=['POST'])
+@jwt_required
 def register_user():
     if request.method == 'POST':
-        user_scm = UserSchema()
+
+        isAdmin = get_raw_jwt()["user_claims"]["isAdmin"]
+        if not isAdmin:
+            return {"message": "register hanya dapat dilakukan oleh admin"}, 400
+
+        schema = UserRegisterSchema()
         try:
-            data = user_scm.load(request.get_json())
+            data = schema.load(request.get_json())
         except ValidationError as err:
             return err.messages, 400
-
-        if "email" not in data:
-            data["email"] = "nothave@email.com"
 
         # mengecek user eksisting
         if user_eksis(data["username"]):
             return {"message": "nama pengguna tidak tersedia"}, 400
 
+        # verifify inputan can be null
+        if "email" not in data:
+            data["email"] = "nothave@email.com"
+        if "isAdmin" not in data:
+            data["isAdmin"] = False
+        if "isAgent" not in data:
+            data["isAgent"] = False
+        if "isForeman" not in data:
+            data["isForeman"] = False
+
         # hash password
         pw_hash = bcrypt.generate_password_hash(
             data["password"]).decode("utf-8")
 
-        mongo.db.users.insert_one(
-            {"username": data["username"], "password": pw_hash, "email": data["email"]})
+        data_insert = {
+            "username": data["username"],
+            "password": pw_hash,
+            "email": data["email"],
+            "name": data["name"],
+            "isAdmin": data["isAdmin"],
+            "isForeman": data["isForeman"],
+            "isAgent": data["isAgent"],
+            "company": data["company"],
+            "position": data["position"],
+            "branch": data["branch"]
+        }
+        try:
+            mongo.db.users.insert_one(data_insert)
+        except:
+            return {"message": "galat insert register"}, 500
+
         return {"message": "data berhasil disimpan"}, 201
 
 
-@bp.route('/user/<string:name>', methods=['GET'])
-def mencari_user(name):
+@bp.route('/admin/users/<string:username>', methods=['PUT', 'DELETE'])
+@jwt_required
+def user_admin(username):
+
+    isAdmin = get_jwt_claims()["isAdmin"]
+    print("hasil print", isAdmin)
+    if not isAdmin:
+        return {"message": "register hanya dapat dilakukan oleh admin"}, 400
+
+    if request.method == 'PUT':
+        schema = UserEditSchema()
+        try:
+            data = schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
+
+        if user_eksis(username):
+            find = {"username": username}
+            update = {
+                "name": data["name"],
+                "email": data["email"],
+                "isAdmin": data["isAdmin"],
+                "isAgent": data["isAgent"],
+                "isForeman": data["isForeman"],
+                "branch": data["branch"],
+                "company": data["company"],
+                "position": data["position"]
+            }
+
+            mongo.db.users.update_one(find, {'$set': update})
+
+            return {"message": f"user {username} berhasil diubah"}, 201
+
+        return {"message": f"user {username} tidak ditemukan"}, 400
+
+    if request.method == 'DELETE':
+        if user_eksis(username):
+            mongo.db.users.remove({"username": username})
+            return {"message": f"user {username} berhasil dihapus"}, 201
+        return {"message": f"user {username} tidak ditemukan"}
+
+
+@bp.route("/users/<string:username>", methods=['GET', 'PUT'])
+@jwt_required
+def user(username):
     if request.method == 'GET':
         result = mongo.db.users.find_one(
-            {"username": name}, {"password": 0})
+            {"username": username}, {"password": 0})
         return jsonify(result), 200
+
+
+@bp.route("/users", methods=['GET'])
+@jwt_required
+def user_list():
+    if request.method == 'GET':
+        user_list = []
+        result = mongo.db.users.find({}, {"password": 0})
+        for user in result:
+            user_list.append(user)
+
+        return jsonify(user_list), 200
 
 
 @bp.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
-        data = request.get_json()
+        schema = UserLoginSchema()
+        try:
+            data = schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
 
         user = mongo.db.users.find_one({"username": data["username"]})
-
-        print(user)
 
         # Cek apakah hash password inputan sama
         if user and bcrypt.check_password_hash(user["password"], data["password"]):
             # Membuat akses token menggunakan username di database
             access_token = create_access_token(
                 identity=user["username"],
+                expires_delta=timedelta(days=EXPIRED_TOKEN),
                 fresh=True)
             refresh_token = create_refresh_token(user["username"])
             return {
@@ -81,9 +179,42 @@ def login():
         return {"message": "user atau password salah"}, 400
 
 
+@bp.route('/change-password', methods=['POST'])
+@jwt_required
+def change_password():
+    schema = UserChangePassSchema()
+    try:
+        data = schema.load(request.get_json())
+    except ValidationError as err:
+        return err.messages, 400
+
+    user_username = get_jwt_identity()
+
+    user = mongo.db.users.find_one(
+        {"username": user_username}, {"password": 1})
+
+    # Cek apakah hash password inputan sama
+    if bcrypt.check_password_hash(user["password"], data["password"]):
+        # menghash password baru
+        inputan_new_password_hash = bcrypt.generate_password_hash(
+            data["new_password"]).decode("utf-8")
+
+        query = {"username": user_username}
+        update = {'$set': {"password": inputan_new_password_hash}}
+
+        mongo.db.users.update_one(query, update)
+        return {'message': "password berhasil di ubah"}, 200
+
+    return {'message': "password salah"}, 400
+
+
 @bp.route('/refresh', methods=['POST'])
 @jwt_refresh_token_required
 def refresh_token():
     current_user = get_jwt_identity()
-    new_token = create_access_token(identity=current_user, fresh=False)
+    new_token = create_access_token(
+        identity=current_user,
+        expires_delta=timedelta(days=EXPIRED_TOKEN),
+        fresh=False
+    )
     return {'access_token': new_token}, 200

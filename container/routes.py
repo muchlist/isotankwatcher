@@ -11,7 +11,7 @@ from flask_jwt_extended import (
     get_jwt_claims,
 )
 from marshmallow import ValidationError
-from container.container_schema import CheckContainerSchema
+from container.container_schema import ContainerInitSchema
 
 from datetime import datetime
 
@@ -20,21 +20,21 @@ from datetime import datetime
 bp = Blueprint('container_bp', __name__)
 
 
-@bp.route('/test', methods=['GET','POST'])
+@bp.route('/containers', methods=['GET','POST'])
 @jwt_required
-def test_aja():
+def get_container_list():
     if request.method == 'GET':
-        mongo_result = mongo.db.container.find({})
-        results = []
-        for result in mongo_result:
-            results.append(result)
+        container_coll = mongo.db.container.find({})
+        container_list = []
+        for container in mongo_result:
+            container_list.append(container)
         
-        return {"result": results}, 200
+        return {"containers": container_list}, 200
         
     
     if request.method == 'POST':
 
-        schema = CheckContainerSchema()
+        schema = ContainerInitSchema()
         try:
             data = schema.load(request.get_json())
         except ValidationError as err:

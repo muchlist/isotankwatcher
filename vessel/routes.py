@@ -19,7 +19,7 @@ from bson.objectid import ObjectId
 bp = Blueprint('vessel_bp', __name__)
 
 
-@bp.route('/vessels', methods=['GET','POST'])
+@bp.route('/vessels', methods=['GET', 'POST']) #?search=
 @jwt_required
 def get_vessel_list():
     if request.method == 'GET':
@@ -27,17 +27,17 @@ def get_vessel_list():
         search = request.args.get("search")
         if search:
             query_string = {'$regex': f'.*{search}.*'}
-            vessel_collection = mongo.db.vessel.find({"ship_name" : query_string})
+            vessel_collection = mongo.db.vessel.find(
+                {"ship_name": query_string})
         else:
             vessel_collection = mongo.db.vessel.find()
 
         vessels_list = []
         for vessel in vessel_collection:
             vessels_list.append(vessel)
-        
+
         return {"vessels": vessels_list}, 200
-        
-    
+
     if request.method == 'POST':
         schema = VesselRegisterSchema()
         try:
@@ -62,20 +62,19 @@ def get_vessel_list():
         return {"message": "data berhasil disimpan"}, 201
 
 
-@bp.route('/vessels/<vessel_id>', methods=['GET','POST'])
+@bp.route('/vessels/<vessel_id>', methods=['GET', 'POST'])
 @jwt_required
 def get_vessel_detail(vessel_id):
 
     isAdmin = get_jwt_claims()["isAdmin"]
 
     if request.method == 'GET':
-        ship = mongo.db.vessel.find_one({'_id':ObjectId(vessel_id)})
-        return jsonify(ship),200
-
+        ship = mongo.db.vessel.find_one({'_id': ObjectId(vessel_id)})
+        return jsonify(ship), 200
 
     if request.method == 'POST':
         if not isAdmin:
-            return {"message":"Hanya dapat diubah oleh admin"},400
+            return {"message": "Hanya dapat diubah oleh admin"}, 400
 
         schema = VesselRegisterSchema()
         try:
@@ -91,12 +90,11 @@ def get_vessel_detail(vessel_id):
         }
 
         try:
-            mongo.db.vessel.update_one({'_id':ObjectId(vessel_id)}, {'$set': data_to_change})
+            mongo.db.vessel.update_one({'_id': ObjectId(vessel_id)}, {
+                                       '$set': data_to_change})
         except:
-            return {"message": "galat, database gagal diakses"},500
+            return {"message": "galat, database gagal diakses"}, 500
 
-        data_to_change["_id"]=vessel_id
+        data_to_change["_id"] = vessel_id
 
         return jsonify(data_to_change), 200
-
-

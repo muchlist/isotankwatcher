@@ -58,10 +58,14 @@ def register_user():
         # verifify inputan can be null
         if "email" not in data:
             data["email"] = "nothave@email.com"
+        if "phone" not in data:
+            data["phone"] = "Tidak terdata"
         if "isAdmin" not in data:
             data["isAdmin"] = False
         if "isAgent" not in data:
             data["isAgent"] = False
+        if "isTally" not in data:
+            data["isTally"] = False
         if "isForeman" not in data:
             data["isForeman"] = False
 
@@ -70,16 +74,18 @@ def register_user():
             data["password"]).decode("utf-8")
 
         data_insert = {
-            "username": data["username"],
+            "username": data["username"].upper(),
             "password": pw_hash,
             "email": data["email"],
+            "phone": data["phone"],
             "name": data["name"],
             "isAdmin": data["isAdmin"],
             "isForeman": data["isForeman"],
+            "isTally": data["isTally"],
             "isAgent": data["isAgent"],
-            "company": data["company"],
+            "company": data["company"].upper(),
             "position": data["position"],
-            "branch": data["branch"]
+            "branch": [x.upper() for x in data["branch"]]
         }
         try:
             mongo.db.users.insert_one(data_insert)
@@ -96,7 +102,7 @@ def user_admin(username):
     isAdmin = get_jwt_claims()["isAdmin"]
     print("hasil print", isAdmin)
     if not isAdmin:
-        return {"message": "register hanya dapat dilakukan oleh admin"}, 400
+        return {"message": "Edit hanya dapat dilakukan oleh admin"}, 400
 
     if request.method == 'PUT':
         schema = UserEditSchema()
@@ -110,11 +116,13 @@ def user_admin(username):
             update = {
                 "name": data["name"],
                 "email": data["email"],
+                "phone": data["phone"],
                 "isAdmin": data["isAdmin"],
                 "isAgent": data["isAgent"],
+                "isTally": data["isTally"],
                 "isForeman": data["isForeman"],
-                "branch": data["branch"],
-                "company": data["company"],
+                "branch": data["branch"].upper(),
+                "company": data["company"].upper(),
                 "position": data["position"]
             }
 

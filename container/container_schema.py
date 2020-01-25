@@ -2,8 +2,8 @@ from marshmallow import Schema, fields
 
 
 class CheckContainerSchema(Schema):
-    checked_by = fields.Str(required=True)
-    checked_by_name = fields.Str(required=True)
+    #checked_by = fields.Str(required=True)
+    #checked_by_name = fields.Str(required=True)
     checked_at = fields.DateTime(required=True)
     check_position = fields.Str(required=True)
     status = fields.Str(required=True)  # list di form mas tri

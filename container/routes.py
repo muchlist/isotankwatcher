@@ -13,7 +13,12 @@ from flask_jwt_extended import (
 from marshmallow import ValidationError
 from bson.objectid import ObjectId
 
-from container.container_schema import ContainerInitSchema, ContainerEditInfoSchema, ContainerLvlUpSchema
+from container.container_schema import (
+    ContainerInitSchema,
+    ContainerEditInfoSchema,
+    ContainerLvlUpSchema,
+    CheckContainerSchema
+)
 
 from datetime import datetime
 import string
@@ -65,7 +70,8 @@ def get_container_list():
                 # post client dari collection vessel
                 "vessel_id": data["vessel_id"],
                 "vessel": data["vessel"],
-                "agent":  data["agent"].upper(),  #PENTING DIGUNAKAN UNTUK MEMUNCULKAN DI AGENT
+                # PENTING DIGUNAKAN UNTUK MEMUNCULKAN DI AGENT
+                "agent":  data["agent"].upper(),
 
                 # search client dari jwt user
                 "branch": data["branch"].upper(),
@@ -300,6 +306,7 @@ def change_lvl_form_2_to_1(id_container):
 
     return {"message": "User tidak memiliki hak akses untuk merubah dokumen ini"}, 403
 
+
 """Hanya dapat dilakukan foreman mengembalikan dokumen approve ke editable karena keadaan tertentu"""
 @bp.route('/containers/<id_container>/unapprove', methods=['POST'])
 @jwt_required
@@ -336,7 +343,6 @@ def change_lvl_form_3_to_1(id_container):
     return {"message": "User tidak memiliki hak akses untuk merubah dokumen ini"}, 403
 
 
-
 """
 approval digunakan bisa oleh foreman atau oleh agent dengan syarat dokumen harus 
 ber lvl 2 ke 3 untuk foreman
@@ -354,8 +360,8 @@ def approval(id_container):
 
     claims = get_jwt_claims()
 
-    #JIKA foreman harus lvl 2 ke lvl 3
-    #JIKA Agent harus lvl 3 ke lvl 4
+    # JIKA foreman harus lvl 2 ke lvl 3
+    # JIKA Agent harus lvl 3 ke lvl 4
     if claims["isForeman"]:
         query = {
             '_id': ObjectId(id_container),
@@ -410,3 +416,71 @@ def approval(id_container):
     else:
         return {"message": "user tidak memiliki hak akses untuk mengedit dokumen"}, 403
 
+
+@bp.route('/containers/<id_container>/status', methods=['POST'])
+@jwt_required
+def add_status(id_container):
+
+    if request.method == 'POST':
+        schema = CheckContainerSchema()
+        try:
+            data = schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
+
+        claims = get_jwt_claims()
+
+        if claims["isForeman"] or claims["isTally"]:
+
+            find = {
+                '_id': ObjectId(id_container),
+                "document_level": 1
+            }
+
+            status_insert = {
+                "status_id": id_generator(),
+                "checked_at": data["checked_at"],
+                "check_position": data["check_position"],
+                "status": data["status"].upper(),
+                "witness": data["witness"].upper(),
+                "note": data["note"],
+
+                # AUTO
+                "checked_by": get_jwt_identity(),
+                "checked_by_name": claims["name"],
+            }
+
+            # DATABASE
+            container = mongo.db.container.find_one_and_update(
+                find,
+                {'$set': {"updated_at" : datetime.now()}, '$push': {'status': status_insert}},
+                return_document=True
+            )
+            if container is None:
+                return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+            return jsonify(container), 201
+        return {"message": "User ini tidak memiliki hak akses untuk menambahkan status"}, 403
+
+
+@bp.route('/containers/<id_container>/status/<id_status>', methods=['DELETE'])
+@jwt_required
+def remove_status(id_container, id_status):
+    
+        claims = get_jwt_claims()
+        if claims["isForeman"] or claims["isTally"]:
+
+            find = {
+                '_id': ObjectId(id_container),
+                "document_level": 1
+            }
+
+            # DATABASE
+            container = mongo.db.container.find_one_and_update(
+                find,
+                {'$set': {"updated_at" : datetime.now()}, '$pull': {'status': {'status_id': id_status}}},
+                return_document=True
+            )
+            if container is None:
+                return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+            return jsonify(container), 201
+        return {"message": "User ini tidak memiliki hak akses untuk menambahkan status"}, 403

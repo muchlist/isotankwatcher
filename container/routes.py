@@ -86,7 +86,7 @@ def get_container_list():
                 "created_at": datetime.now(),
                 "updated_at": datetime.now(),
                 "url_img_up": "",
-                "url_img_down": "",
+                "url_img_bottom": "",
                 "url_img_front": "",
                 "url_img_back": "",
                 "url_img_left": "",
@@ -159,6 +159,9 @@ def get_container_detail(id_container):
     claims = get_jwt_claims()
 
     if request.method == 'GET':
+        if not ObjectId.is_valid(id_container):
+            return {"message": "Object ID tidak valid"}, 400
+
         container = mongo.db.container.find_one(
             {'_id': ObjectId(id_container)})
         return jsonify(container), 200
@@ -172,6 +175,9 @@ def get_container_detail(id_container):
             data = schema.load(request.get_json())
         except ValidationError as err:
             return err.messages, 400
+
+        if not ObjectId.is_valid(id_container):
+            return {"message": "Object ID tidak valid"}, 400
 
         if claims["isTally"] or claims["isForeman"] or claims["isAdmin"]:
 
@@ -248,6 +254,9 @@ def change_lvl_from_1_to_2(id_container):
         except ValidationError as err:
             return err.messages, 400
 
+        if not ObjectId.is_valid(id_container):
+            return {"message": "Object ID tidak valid"}, 400
+
         query = {
             '_id': ObjectId(id_container),
             "updated_at": data["updated_at"],
@@ -321,13 +330,21 @@ def change_lvl_form_3_to_1(id_container):
         except ValidationError as err:
             return err.messages, 400
 
+        if not ObjectId.is_valid(id_container):
+            return {"message": "Object ID tidak valid"}, 400
+
         query = {
             '_id': ObjectId(id_container),
             "updated_at": data["updated_at"],
             "document_level": 3
         }
         update = {
-            '$set': {"document_level": 1}
+            '$set': {
+                "document_level": 1,
+                "updated_at": datetime.now(),
+                "approval_foreman": False,
+                "approval_foreman_name": f"Dibatalkan - {claims['name']}"
+            }
         }
 
         # DATABASE
@@ -358,11 +375,15 @@ def approval(id_container):
     except ValidationError as err:
         return err.messages, 400
 
+    if not ObjectId.is_valid(id_container):
+        return {"message": "Object ID tidak valid"}, 400
+
     claims = get_jwt_claims()
 
     # JIKA foreman harus lvl 2 ke lvl 3
     # JIKA Agent harus lvl 3 ke lvl 4
     if claims["isForeman"]:
+
         query = {
             '_id': ObjectId(id_container),
             "updated_at": data["updated_at"],
@@ -428,6 +449,9 @@ def add_status(id_container):
         except ValidationError as err:
             return err.messages, 400
 
+        if not ObjectId.is_valid(id_container):
+            return {"message": "Object ID tidak valid"}, 400
+
         claims = get_jwt_claims()
 
         if claims["isForeman"] or claims["isTally"]:
@@ -453,7 +477,8 @@ def add_status(id_container):
             # DATABASE
             container = mongo.db.container.find_one_and_update(
                 find,
-                {'$set': {"updated_at" : datetime.now()}, '$push': {'status': status_insert}},
+                {'$set': {"updated_at": datetime.now()}, '$push': {
+                    'status': status_insert}},
                 return_document=True
             )
             if container is None:
@@ -465,22 +490,25 @@ def add_status(id_container):
 @bp.route('/containers/<id_container>/status/<id_status>', methods=['DELETE'])
 @jwt_required
 def remove_status(id_container, id_status):
-    
-        claims = get_jwt_claims()
-        if claims["isForeman"] or claims["isTally"]:
 
-            find = {
-                '_id': ObjectId(id_container),
-                "document_level": 1
-            }
+    if not ObjectId.is_valid(id_container):
+        return {"message": "Object ID tidak valid"}, 400
 
-            # DATABASE
-            container = mongo.db.container.find_one_and_update(
-                find,
-                {'$set': {"updated_at" : datetime.now()}, '$pull': {'status': {'status_id': id_status}}},
-                return_document=True
-            )
-            if container is None:
-                return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
-            return jsonify(container), 201
-        return {"message": "User ini tidak memiliki hak akses untuk menambahkan status"}, 403
+    claims = get_jwt_claims()
+    if claims["isForeman"] or claims["isTally"]:
+        find = {
+            '_id': ObjectId(id_container),
+            "document_level": 1
+        }
+
+        # DATABASE
+        container = mongo.db.container.find_one_and_update(
+            find,
+            {'$set': {"updated_at": datetime.now()}, '$pull': {'status': {
+                'status_id': id_status}}},
+            return_document=True
+        )
+        if container is None:
+            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+        return jsonify(container), 201
+    return {"message": "User ini tidak memiliki hak akses untuk menambahkan status"}, 403

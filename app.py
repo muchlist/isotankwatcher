@@ -1,8 +1,9 @@
 import os
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
+from flask_uploads import configure_uploads, patch_request_class
 
 from db import mongo
 from utils.my_encoder import JSONEncoder
@@ -10,14 +11,18 @@ from utils.my_bcrypt import bcrypt
 from user.routes import bp as user_bp
 from container.routes import bp as container_bp
 from vessel.routes import bp as vessel_bp
+from container_image.routes import bp as container_image_bp
+from utils.image_helper import IMAGE_SET
 
+#Load environtmen di file .env
 load_dotenv('.env')
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
-#app.config['JWT_BLACKLIST_ENABLED'] = True
-#app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
+app.config["UPLOADED_IMAGES_DEST"] = os.path.join("static", "images")
 app.secret_key = os.environ.get("SECRET_KEY")
+patch_request_class(app, 6 * 1024 * 1024) #6MB max upload
+configure_uploads(app, IMAGE_SET)
 
 bcrypt.init_app(app)
 jwt = JWTManager(app)
@@ -41,6 +46,7 @@ def add_claims_to_jwt(identity):
 app.register_blueprint(user_bp)
 app.register_blueprint(container_bp)
 app.register_blueprint(vessel_bp)
+app.register_blueprint(container_image_bp)
 
 if __name__ == '__main__':
     mongo.init_app(app)

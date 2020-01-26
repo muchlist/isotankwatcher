@@ -19,7 +19,7 @@ from bson.objectid import ObjectId
 bp = Blueprint('vessel_bp', __name__)
 
 
-@bp.route('/vessels', methods=['GET', 'POST']) #?search=
+@bp.route('/vessels', methods=['GET', 'POST'])  # ?search=
 @jwt_required
 def get_vessel_list():
     if request.method == 'GET':
@@ -67,6 +67,8 @@ def get_vessel_list():
 def get_vessel_detail(vessel_id):
 
     isAdmin = get_jwt_claims()["isAdmin"]
+    if not ObjectId.is_valid(vessel_id):
+        return {"message": "Object Id tidak valid"}, 400
 
     if request.method == 'GET':
         ship = mongo.db.vessel.find_one({'_id': ObjectId(vessel_id)})

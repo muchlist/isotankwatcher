@@ -41,6 +41,32 @@ def get_container_list():
 
     claims = get_jwt_claims()
 
+    if request.method == 'GET':
+
+        """ ?branch=SAMPIT    &   document_level=1  &  agent=MERATUS"""
+
+        branch = request.args.get("branch")
+        document_level = int(request.args.get("document_level"))
+        agent = request.args.get("agent")
+
+        find = {}
+
+        if branch:
+            find["branch"] = branch
+        if document_level:
+            find["document_level"] = document_level
+        if agent:
+            find["agent"] = agent
+
+        container_coll = mongo.db.container.find(find).sort("_id", -1)
+        container_list = []
+
+        for container in container_coll:
+            container_list.append(container)
+
+        return {"containers": container_list}, 200
+
+
     if request.method == 'POST':
 
         """
@@ -126,30 +152,6 @@ def get_container_list():
 
         return {"message": "user tidak memiliki hak akses untuk menambahkan data"}, 401
 
-    if request.method == 'GET':
-
-        """ ?branch=SAMPIT    &   lvl=1  &  """
-
-        branch = request.args.get("branch")
-        doc_lvl = request.args.get("lvl")
-        agent = request.args.get("agent")
-
-        find = {}
-
-        if doc_lvl:
-            find["document_level"] = doc_lvl
-        if branch:
-            find["branch"] = branch
-        if agent:
-            find["agent"] = agent
-
-        container_coll = mongo.db.container.find(find).sort("_id", -1)
-        container_list = []
-
-        for container in container_coll:
-            container_list.append(container)
-
-        return {"containers": container_list}, 200
 
 
 @bp.route('/containers/<id_container>', methods=['GET', 'PUT', 'DELETE'])

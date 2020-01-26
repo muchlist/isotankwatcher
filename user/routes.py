@@ -226,3 +226,10 @@ def refresh_token():
         fresh=False
     )
     return {'access_token': new_token}, 200
+
+
+@bp.route('/all-agent', methods=['GET'])
+@jwt_required
+def get_agent_list():
+    all_company_array = mongo.db.users.distinct('company')
+    return jsonify(company=all_company_array), 200

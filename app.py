@@ -50,4 +50,4 @@ app.register_blueprint(container_image_bp)
 
 if __name__ == '__main__':
     mongo.init_app(app)
-    app.run(port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

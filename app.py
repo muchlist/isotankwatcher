@@ -19,11 +19,12 @@ load_dotenv('.env')
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
-app.config["UPLOADED_IMAGES_DEST"] = os.path.join("static", "images")
+app.config["UPLOADED_IMAGES_DEST"] = os.environ.get("UPLOADED_IMAGES_DEST")
 app.secret_key = os.environ.get("SECRET_KEY")
 patch_request_class(app, 6 * 1024 * 1024) #6MB max upload
 configure_uploads(app, IMAGE_SET)
 
+mongo.init_app(app)
 bcrypt.init_app(app)
 jwt = JWTManager(app)
 
@@ -49,5 +50,4 @@ app.register_blueprint(vessel_bp)
 app.register_blueprint(container_image_bp)
 
 if __name__ == '__main__':
-    mongo.init_app(app)
     app.run(host='0.0.0.0', port=5000, debug=True)

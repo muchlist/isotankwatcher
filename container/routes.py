@@ -46,7 +46,7 @@ def get_container_list():
         """ ?branch=SAMPIT    &   document_level=1  &  agent=MERATUS"""
 
         branch = request.args.get("branch")
-        document_level = int(request.args.get("document_level"))
+        document_level = request.args.get("document_level")
         agent = request.args.get("agent")
 
         find = {}
@@ -54,7 +54,7 @@ def get_container_list():
         if branch:
             find["branch"] = branch
         if document_level:
-            find["document_level"] = document_level
+            find["document_level"] = int(document_level)
         if agent:
             find["agent"] = agent
 

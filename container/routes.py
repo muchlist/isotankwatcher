@@ -43,11 +43,18 @@ def get_container_list():
 
     if request.method == 'GET':
 
-        """ ?branch=SAMPIT    &   document_level=1  &  agent=MERATUS"""
+        """ ?branch=SAMPIT    &   document_level=1  &  agent=MERATUS & page=1"""
 
         branch = request.args.get("branch")
         document_level = request.args.get("document_level")
         agent = request.args.get("agent")
+
+        # PAGGING
+        page_number = 1
+        page = request.args.get("page")
+        LIMIT = 40
+        if page:
+            page_number = int(page)
 
         find = {}
 
@@ -58,14 +65,14 @@ def get_container_list():
         if agent:
             find["agent"] = agent
 
-        container_coll = mongo.db.container.find(find).sort("_id", -1)
+        container_coll = mongo.db.container.find(find).skip(
+            (page_number - 1) * LIMIT).limit(LIMIT).sort("_id", -1)
         container_list = []
 
         for container in container_coll:
             container_list.append(container)
 
         return {"containers": container_list}, 200
-
 
     if request.method == 'POST':
 
@@ -151,7 +158,6 @@ def get_container_list():
             return {"message": "data berhasil disimpan"}, 201
 
         return {"message": "user tidak memiliki hak akses untuk menambahkan data"}, 401
-
 
 
 @bp.route('/containers/<id_container>', methods=['GET', 'PUT', 'DELETE'])

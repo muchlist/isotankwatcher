@@ -1,0 +1,4 @@
+class Config(object):
+    MONGO_URI=
+    UPLOADED_IMAGES_DEST = "static/images/"
+    JWT_SECRET_KEY=

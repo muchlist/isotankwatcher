@@ -1,6 +1,5 @@
 import os
 
-from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_uploads import configure_uploads, patch_request_class
@@ -14,14 +13,13 @@ from vessel.routes import bp as vessel_bp
 from container_image.routes import bp as container_image_bp
 from utils.image_helper import IMAGE_SET
 
-#Load environtmen di file .env
-load_dotenv('.env')
-
 app = Flask(__name__)
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
-app.config["UPLOADED_IMAGES_DEST"] = os.environ.get("UPLOADED_IMAGES_DEST")
-app.secret_key = os.environ.get("SECRET_KEY")
-patch_request_class(app, 6 * 1024 * 1024) #6MB max upload
+app.config.from_object('config.Config')
+# app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
+# app.config["UPLOADED_IMAGES_DEST"] = os.environ.get("UPLOADED_IMAGES_DEST")
+# app.config["JWT_SECRET_KEY "] = os.environ.get("SECRET_KEY")
+# app.secret_key = os.environ.get("SECRET_KEY")
+patch_request_class(app, 6 * 1024 * 1024)  # 6MB max upload
 configure_uploads(app, IMAGE_SET)
 
 mongo.init_app(app)
@@ -50,4 +48,4 @@ app.register_blueprint(vessel_bp)
 app.register_blueprint(container_image_bp)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=os.environ.get("DEBUG"))
+    app.run(host='0.0.0.0', port=5000, debug=True)

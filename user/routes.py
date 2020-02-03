@@ -121,7 +121,7 @@ def user_admin(username):
                 "isAgent": data["isAgent"],
                 "isTally": data["isTally"],
                 "isForeman": data["isForeman"],
-                "branch": data["branch"].upper(),
+                "branch": [x.upper() for x in data["branch"]],
                 "company": data["company"].upper(),
                 "position": data["position"]
             }
@@ -181,7 +181,14 @@ def login():
             refresh_token = create_refresh_token(user["username"])
             return {
                 'access_token': access_token,
-                'refresh_token': refresh_token
+                'refresh_token': refresh_token,
+                'name': user['name'],
+                'isAdmin': user['isAdmin'],
+                'isTally': user['isTally'],
+                'isForeman': user['isForeman'],
+                'isAgent': user['isAgent'],
+                "branch": user["branch"],
+                "company": user["company"].upper()
             }, 200
 
         return {"message": "user atau password salah"}, 400

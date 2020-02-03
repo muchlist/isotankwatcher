@@ -18,7 +18,6 @@ app.config.from_object('config.Config')
 # app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 # app.config["UPLOADED_IMAGES_DEST"] = os.environ.get("UPLOADED_IMAGES_DEST")
 # app.config["JWT_SECRET_KEY "] = os.environ.get("SECRET_KEY")
-# app.secret_key = os.environ.get("SECRET_KEY")
 patch_request_class(app, 6 * 1024 * 1024)  # 6MB max upload
 configure_uploads(app, IMAGE_SET)
 

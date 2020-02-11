@@ -145,6 +145,7 @@ def get_container_list():
                     "check_position": data["check_position"],
                     "status": data["status"].upper(),
                     "witness": data["witness"].upper(),
+                    "witness_img_url": data["witness_img_url"],
                     "note": data["note"],
 
                     # AUTO
@@ -483,6 +484,7 @@ def add_status(id_container):
                 "check_position": data["check_position"],
                 "status": data["status"].upper(),
                 "witness": data["witness"].upper(),
+                "witness_img_url": data["witness_img_url"],
                 "note": data["note"],
 
                 # AUTO

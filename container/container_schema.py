@@ -9,6 +9,7 @@ class CheckContainerSchema(Schema):
     status = fields.Str(required=True)  # list di form mas tri
     note = fields.Str(required=True)  # list di form mas tri
     witness = fields.Str(required=True)
+    witness_img_url = fields.Str(required=True)
 
 
 class ContainerInitSchema(Schema):

@@ -24,6 +24,13 @@ bp = Blueprint('container_image_bp', __name__)
 def id_generator(size=5, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
+"""
+Memerlukan pemisahan knowledge antara foto container dan foto witness
+pada foto container hasil upload otomatis dimasukkan pathnya ke database
+sedangkan foto saksi(witness) berbeda karena fotonya harus ada lebih dulu sebelum
+statusnya ditambahkan, sehingga disederhanakan menjadi foto diupload dan url
+dikembalikan sebagai response untuk dimasukkan lagi ke status container
+"""
 
 @bp.route('/upload/image/<container_id>/<position>', methods=['POST'])
 @jwt_required
@@ -38,8 +45,8 @@ def upload_image(container_id, position):
     if not ObjectId.is_valid(container_id):
         return {"message": "Object ID tidak valid"}, 400
 
-    #Cek path posisi gambar
-    if position not in ["up", "bottom", "front", "back", "left", "right"]:
+    #Cek path posisi gambar, selain witness
+    if position not in ["up", "bottom", "front", "back", "left", "right", "witness"]:
         return {"message": "path salah"}, 400
 
     # AUTH
@@ -61,14 +68,18 @@ def upload_image(container_id, position):
 
             # DATABASE
             # key di database berdasarkan posisi gambar path url
-            key = f"url_img_{position}"
-            container = mongo.db.container.find_one_and_update(
-                {'_id': ObjectId(container_id)},
-                {'$set': {key: image_path}}, {'_id': 1}
-            )
+            if position != "witness":
+                """jika posisi == witness, tidak melakukan penyimpanan url di
+                database, hanya menyimpan foto dan mengembalikan url"""
 
-            if container is None:
-                return {"message": "container id salah"},400
+                key = f"url_img_{position}"
+                container = mongo.db.container.find_one_and_update(
+                    {'_id': ObjectId(container_id)},
+                    {'$set': {key: image_path}}, {'_id': 1}
+                )
+
+                if container is None:
+                    return {"message": "container id salah"},400
 
             return {"message": f"image {image_path} uploaded"}, 201
 

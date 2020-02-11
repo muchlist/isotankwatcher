@@ -99,6 +99,7 @@ def get_container_list():
                 "size": data["size"],
                 "tipe": data["tipe"].upper(),
                 "full_or_empty": data["full_or_empty"].upper(),
+                "activity": data["activity"].upper(),
 
                 # post client dari collection vessel
                 "vessel_id": data["vessel_id"],
@@ -106,8 +107,13 @@ def get_container_list():
                 # PENTING DIGUNAKAN UNTUK MEMUNCULKAN DI AGENT
                 "agent":  data["agent"].upper(),
 
+
+                #AUTO FROM CLIENT
                 # search client dari jwt user
                 "branch": data["branch"].upper(),
+
+                # from data vessel
+                "int_dom" : data["int_dom"].upper(),
 
                 # AUTO
                 "approval_foreman": False,
@@ -203,6 +209,8 @@ def get_container_detail(id_container):
                     "size": data["size"],
                     "tipe": data["tipe"].upper(),
                     "full_or_empty": data["full_or_empty"].upper(),
+                    "activity": data["activity"].upper(),
+                    "int_dom" : data["int_dom"].upper(),
 
                     "updated_at": datetime.now(),
                     "creator_username": get_jwt_identity(),

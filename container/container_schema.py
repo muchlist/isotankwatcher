@@ -32,6 +32,8 @@ class ContainerInitSchema(Schema):
     size = fields.Int(required=True)  # 20 40 45 Feet
     tipe = fields.Str(required=True)  # Dry Rfr Tnk Flt o/d
     full_or_empty = fields.Str(required=True)
+    activity = fields.Str(required=True)
+    int_dom = fields.Str(required=True)
     # doc_level: 1
     # last_status = fields.Str(required=True)
     # approval_foreman = fields.Bool(required=True)
@@ -55,6 +57,8 @@ class ContainerEditInfoSchema(Schema):
     size = fields.Int(required=True)  # 20 40 45 Feet
     tipe = fields.Str(required=True)  # Dry Rfr Tnk Flt o/d
     full_or_empty = fields.Str(required=True)
+    activity = fields.Str(required=True)
+    int_dom = fields.Str(required=True)
 
     updated_at = fields.DateTime(required=True)
     # creator_username = fields.Str(required=True)

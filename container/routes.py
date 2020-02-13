@@ -43,7 +43,9 @@ def get_container_list():
 
     if request.method == 'GET':
 
-        """ ?branch=SAMPIT    &   document_level=1  &  agent=MERATUS & page=1"""
+        """ ?branch=SAMPIT    
+        &  document_level=1 (spesial case 23) 
+        &  agent=MERATUS & page=1"""
 
         branch = request.args.get("branch")
         document_level = request.args.get("document_level")
@@ -61,7 +63,11 @@ def get_container_list():
         if branch:
             find["branch"] = branch
         if document_level:
-            find["document_level"] = int(document_level)
+            #untuk memunculkan lvl2 dan lvl3
+            if document_level == "23":
+                find["document_level"] = {'$in':[2,3]}
+            else:
+                find["document_level"] = int(document_level)
         if agent:
             find["agent"] = agent
 
@@ -100,6 +106,7 @@ def get_container_list():
                 "tipe": data["tipe"].upper(),
                 "full_or_empty": data["full_or_empty"].upper(),
                 "activity": data["activity"].upper(),
+                "created_at": data["created_at"],
 
                 # post client dari collection vessel
                 "vessel_id": data["vessel_id"],
@@ -122,7 +129,6 @@ def get_container_list():
                 "approval_agent_name": "",
                 "creator_username": get_jwt_identity(),
                 "creator_name": claims["name"],
-                "created_at": datetime.now(),
                 "updated_at": datetime.now(),
                 "url_img_up": "",
                 "url_img_bottom": "",
@@ -212,6 +218,7 @@ def get_container_detail(id_container):
                     "full_or_empty": data["full_or_empty"].upper(),
                     "activity": data["activity"].upper(),
                     "int_dom" : data["int_dom"].upper(),
+                    "created_at": data["created_at"],
 
                     "updated_at": datetime.now(),
                     "creator_username": get_jwt_identity(),

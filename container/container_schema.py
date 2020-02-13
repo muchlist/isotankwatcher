@@ -20,15 +20,7 @@ class ContainerInitSchema(Schema):
     voyage = fields.Str(required=True)
     agent = fields.Str(required=True)
     branch = fields.Str(required=True)
-    #status = fields.List(fields.Nested(CheckContainerSchema, required=False))
-
-    checked_at = fields.DateTime(required=False)
-    check_position = fields.Str(required=False)
-    status = fields.Str(required=False)  # list di form mas tri
-    witness = fields.Str(required=False)
-    note = fields.Str(required=False)
-    # checked_by = fields.Str(required=True)
-    # checked_by_name = fields.Str(required=True)
+    created_at = fields.DateTime(required=True)
 
     size = fields.Int(required=True)  # 20 40 45 Feet
     tipe = fields.Str(required=True)  # Dry Rfr Tnk Flt o/d
@@ -47,6 +39,16 @@ class ContainerInitSchema(Schema):
     # cabang = fields.Str(required=True) otomatis
     # url_img 0-5
     # file_photo
+    
+    #STATUS BLANK FALSE
+    checked_at = fields.DateTime(required=False)
+    check_position = fields.Str(required=False)
+    status = fields.Str(required=False)  # list di form mas tri
+    witness = fields.Str(required=False)
+    witness_img_url = fields.Str(required=False)
+    note = fields.Str(required=False)
+    # checked_by = fields.Str(required=True)
+    # checked_by_name = fields.Str(required=True)
 
 class ContainerEditInfoSchema(Schema):
 
@@ -61,6 +63,7 @@ class ContainerEditInfoSchema(Schema):
     activity = fields.Str(required=True)
     int_dom = fields.Str(required=True)
 
+    created_at = fields.DateTime(required=False)
     updated_at = fields.DateTime(required=True)
     # creator_username = fields.Str(required=True)
     # creator_name = fields.Str(required=True)

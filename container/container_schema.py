@@ -62,8 +62,8 @@ class ContainerEditInfoSchema(Schema):
     full_or_empty = fields.Str(required=True)
     activity = fields.Str(required=True)
     int_dom = fields.Str(required=True)
+    created_at = fields.DateTime(required=True)
 
-    created_at = fields.DateTime(required=False)
     updated_at = fields.DateTime(required=True)
     # creator_username = fields.Str(required=True)
     # creator_name = fields.Str(required=True)

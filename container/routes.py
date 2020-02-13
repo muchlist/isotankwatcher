@@ -63,9 +63,9 @@ def get_container_list():
         if branch:
             find["branch"] = branch
         if document_level:
-            #untuk memunculkan lvl2 dan lvl3
+            # untuk memunculkan lvl2 dan lvl3
             if document_level == "23":
-                find["document_level"] = {'$in':[2,3]}
+                find["document_level"] = {'$in': [2, 3]}
             else:
                 find["document_level"] = int(document_level)
         if agent:
@@ -115,12 +115,12 @@ def get_container_list():
                 "agent":  data["agent"].upper(),
 
 
-                #AUTO FROM CLIENT
+                # AUTO FROM CLIENT
                 # search client dari jwt user
                 "branch": data["branch"].upper(),
 
                 # from data vessel
-                "int_dom" : data["int_dom"].upper(),
+                "int_dom": data["int_dom"].upper(),
 
                 # AUTO
                 "approval_foreman": False,
@@ -202,44 +202,40 @@ def get_container_detail(id_container):
 
         if claims["isTally"] or claims["isForeman"] or claims["isAdmin"]:
 
-            container = mongo.db.container.find_one(
-                {'_id': ObjectId(id_container)}, {"document_level": 1})
+            data_to_change = {
+                "container_number": data["container_number"].upper(),
+                "vessel_id": data["vessel_id"],
+                "vessel": data["vessel"].upper(),
+                "voyage": data["voyage"].upper(),
+                "size": data["size"],
+                "tipe": data["tipe"].upper(),
+                "full_or_empty": data["full_or_empty"].upper(),
+                "activity": data["activity"].upper(),
+                "int_dom": data["int_dom"].upper(),
+                "created_at": data["created_at"],
 
-            # Hanya dokumen level 1 yang bisa di edit
-            if container["document_level"] == 1:
+                "updated_at": datetime.now(),
+                "creator_username": get_jwt_identity(),
+                "creator_name": claims["name"]
+            }
 
-                data_to_change = {
-                    "container_number": data["container_number"].upper(),
-                    "vessel_id": data["vessel_id"],
-                    "vessel": data["vessel"].upper(),
-                    "voyage": data["voyage"].upper(),
-                    "size": data["size"],
-                    "tipe": data["tipe"].upper(),
-                    "full_or_empty": data["full_or_empty"].upper(),
-                    "activity": data["activity"].upper(),
-                    "int_dom" : data["int_dom"].upper(),
-                    "created_at": data["created_at"],
+            # digunakan untuk memastikan tidak ada yang mengupdate sebelum update ini
+            last_update = data["updated_at"]
 
-                    "updated_at": datetime.now(),
-                    "creator_username": get_jwt_identity(),
-                    "creator_name": claims["name"]
-                }
+            query = {'_id': ObjectId(id_container),
+                     "updated_at": last_update,
+                     "document_level": 1}
+            update = {'$set': data_to_change}
 
-                # digunakan untuk memastikan tidak ada yang mengupdate sebelum update ini
-                last_update = data["updated_at"]
+            # MEMANGGIL DATABASE
+            container = mongo.db.container.find_one_and_update(
+                query, update, return_document=True)
 
-                query = {'_id': ObjectId(id_container),
-                         "updated_at": last_update}
-                update = {'$set': data_to_change}
-                container = mongo.db.container.find_one_and_update(
-                    query, update, return_document=True)
+            if container is None:
+                return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
 
-                if container is None:
-                    return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+            return jsonify(container), 201
 
-                return jsonify(container), 201
-
-            return {"message": "Tidak dapat mengedit dokumen ini"}, 403
         return {"message": "user ini tidak dapat melakukan edit dokumen"}, 401
 
     if request.method == 'DELETE':

@@ -85,6 +85,6 @@ def upload_image(container_id, position):
 
         except UploadNotAllowed:
             extension = image_helper.get_extension(data['image'])
-            return {"message": f"extensi {extension} not allowed"}, 400
+            return {"message": f"extensi {extension} not allowed"}, 406
 
-    return {"message": "user ini tidak memiliki hak akses untuk mengupload"}
+    return {"message": "user ini tidak memiliki hak akses untuk mengupload"}, 403

@@ -43,7 +43,7 @@ def register_user():
 
         isAdmin = get_raw_jwt()["user_claims"]["isAdmin"]
         if not isAdmin:
-            return {"message": "register hanya dapat dilakukan oleh admin"}, 400
+            return {"message": "register hanya dapat dilakukan oleh admin"}, 403
 
         schema = UserRegisterSchema()
         try:
@@ -53,7 +53,7 @@ def register_user():
 
         # mengecek user eksisting
         if user_eksis(data["username"]):
-            return {"message": "nama pengguna tidak tersedia"}, 400
+            return {"message": "nama pengguna tidak tersedia"}, 406
 
         # verifify inputan can be null
         if "email" not in data:
@@ -102,7 +102,7 @@ def user_admin(username):
     isAdmin = get_jwt_claims()["isAdmin"]
     print("hasil print", isAdmin)
     if not isAdmin:
-        return {"message": "Edit hanya dapat dilakukan oleh admin"}, 400
+        return {"message": "Edit hanya dapat dilakukan oleh admin"}, 403
 
     if request.method == 'PUT':
         schema = UserEditSchema()
@@ -130,7 +130,7 @@ def user_admin(username):
 
             return {"message": f"user {username} berhasil diubah"}, 201
 
-        return {"message": f"user {username} tidak ditemukan"}, 400
+        return {"message": f"user {username} tidak ditemukan"}, 404
 
     if request.method == 'DELETE':
         if user_eksis(username):

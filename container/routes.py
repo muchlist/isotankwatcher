@@ -54,7 +54,7 @@ def get_container_list():
         # PAGGING
         page_number = 1
         page = request.args.get("page")
-        LIMIT = 40
+        LIMIT = 30
         if page:
             page_number = int(page)
 
@@ -170,7 +170,7 @@ def get_container_list():
 
             return {"message": "data berhasil disimpan"}, 201
 
-        return {"message": "user tidak memiliki hak akses untuk menambahkan data"}, 401
+        return {"message": "user tidak memiliki hak akses untuk menambahkan data"}, 403
 
 
 @bp.route('/containers/<id_container>', methods=['GET', 'PUT', 'DELETE'])
@@ -232,11 +232,11 @@ def get_container_detail(id_container):
                 query, update, return_document=True)
 
             if container is None:
-                return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+                return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
 
             return jsonify(container), 201
 
-        return {"message": "user ini tidak dapat melakukan edit dokumen"}, 401
+        return {"message": "user ini tidak dapat melakukan edit dokumen"}, 403
 
     if request.method == 'DELETE':
 
@@ -254,9 +254,9 @@ def get_container_detail(id_container):
                 mongo.db.container.delete_one({'_id': ObjectId(id_container)})
                 return {"message": "Dokumen berhasil di hapus"}, 204
 
-            return {"message": "Dokumen berstatus siap tidak dapat dihapus"}, 403
+            return {"message": "Dokumen berstatus siap tidak dapat dihapus"}, 406
 
-        return {"message": "Dokumen hanya bisa di hapus oleh Manajer atau Foreman"}, 401
+        return {"message": "Dokumen hanya bisa di hapus oleh Manajer atau Foreman"}, 403
 
 
 """Hanya dapat dilakukan tally dan foreman apabila lvl doc 1"""
@@ -292,7 +292,7 @@ def change_lvl_from_1_to_2(id_container):
         )
 
         if container is None:
-            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
 
         return jsonify(container), 201
 
@@ -329,7 +329,7 @@ def change_lvl_form_2_to_1(id_container):
         )
 
         if container is None:
-            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
 
         return jsonify(container), 201
 
@@ -373,7 +373,7 @@ def change_lvl_form_3_to_1(id_container):
         )
 
         if container is None:
-            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
 
         return jsonify(container), 201
 
@@ -424,7 +424,7 @@ def approval(id_container):
         )
 
         if container is None:
-            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
 
         return jsonify(container), 201
 
@@ -451,7 +451,7 @@ def approval(id_container):
         )
 
         if container is None:
-            return {"message": "Gagal update. Dokumen belum disetujui pihak Pelindo atau Dokumen berbeda Perusahaan."}, 302
+            return {"message": "Gagal update. Dokumen belum disetujui pihak Pelindo atau Dokumen berbeda Perusahaan."}, 406
 
         return jsonify(container), 201
     else:
@@ -503,7 +503,7 @@ def add_status(id_container):
                 return_document=True
             )
             if container is None:
-                return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+                return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
             return jsonify(container), 201
         return {"message": "User ini tidak memiliki hak akses untuk menambahkan status"}, 403
 
@@ -530,6 +530,6 @@ def remove_status(id_container, id_status):
             return_document=True
         )
         if container is None:
-            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 302
+            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
         return jsonify(container), 201
     return {"message": "User ini tidak memiliki hak akses untuk menambahkan status"}, 403

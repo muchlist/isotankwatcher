@@ -76,7 +76,7 @@ def get_vessel_detail(vessel_id):
 
     if request.method == 'POST':
         if not isAdmin:
-            return {"message": "Hanya dapat diubah oleh admin"}, 400
+            return {"message": "Hanya dapat diubah oleh admin"}, 403
 
         schema = VesselRegisterSchema()
         try:

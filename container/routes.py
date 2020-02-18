@@ -45,11 +45,14 @@ def get_container_list():
 
         """ ?branch=SAMPIT    
         &  document_level=1 (spesial case 23) 
-        &  agent=MERATUS & page=1"""
+        &  agent=MERATUS & page=1
+        &  search=""
+        """
 
         branch = request.args.get("branch")
         document_level = request.args.get("document_level")
         agent = request.args.get("agent")
+        search = request.args.get("search")
 
         # PAGGING
         page_number = 1
@@ -58,18 +61,21 @@ def get_container_list():
         if page:
             page_number = int(page)
 
+        # find database
         find = {}
 
         if branch:
             find["branch"] = branch
         if document_level:
-            # untuk memunculkan lvl2 dan lvl3
+            # Jika dokumen lvl dimasukkan 23 maka untuk memunculkan 2 dan 3
             if document_level == "23":
                 find["document_level"] = {'$in': [2, 3]}
             else:
                 find["document_level"] = int(document_level)
         if agent:
             find["agent"] = agent
+        if search:
+            find["container_number"] = {'$regex': f'.*{search}.*'}
 
         container_coll = mongo.db.container.find(find).skip(
             (page_number - 1) * LIMIT).limit(LIMIT).sort("_id", -1)
@@ -145,19 +151,22 @@ def get_container_list():
                 data_insert["last_status"] = "INIT"
             else:
                 # JIKA TIDAK BLANK
-                status_insert = {
-                    "status_id": id_generator(),
-                    "checked_at": data["checked_at"],
-                    "check_position": data["check_position"],
-                    "status": data["status"].upper(),
-                    "witness": data["witness"].upper(),
-                    "witness_img_url": data["witness_img_url"],
-                    "note": data["note"],
+                try:
+                    status_insert = {
+                        "status_id": id_generator(),
+                        "checked_at": data["checked_at"],
+                        "check_position": data["check_position"],
+                        "status": data["status"].upper(),
+                        "witness": data["witness"].upper(),
+                        "witness_img_url": data["witness_img_url"],
+                        "note": data["note"],
 
-                    # AUTO
-                    "checked_by": get_jwt_identity(),
-                    "checked_by_name": claims["name"],
-                }
+                        # AUTO
+                        "checked_by": get_jwt_identity(),
+                        "checked_by_name": claims["name"],
+                    }
+                except:
+                    return {"message": "Detail status tidak valid"}, 400
 
                 # jika tidak blank data insert dimasukkan status
                 data_insert["status"] = [status_insert]

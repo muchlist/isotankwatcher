@@ -45,21 +45,25 @@ def get_vessel_list():
         except ValidationError as err:
             return err.messages, 400
 
-        if "isActive" not in data:
-            data["isActive"] = True
+        if claims["isForeman"] or claims["isTally"]:
 
-        data_insert = {
-            "ship_name": data["ship_name"].upper(),
-            "agent": data["agent"].upper(),
-            "isInternational": data["isInternational"],
-            "isActive": data["isActive"]
-        }
-        try:
-            mongo.db.vessel.insert_one(data_insert)
-        except:
-            return {"message": "galat insert register"}, 500
+            if "isActive" not in data:
+                data["isActive"] = True
 
-        return {"message": "data berhasil disimpan"}, 201
+            data_insert = {
+                "ship_name": data["ship_name"].upper(),
+                "agent": data["agent"].upper(),
+                "isInternational": data["isInternational"],
+                "isActive": data["isActive"]
+            }
+            try:
+                mongo.db.vessel.insert_one(data_insert)
+            except:
+                return {"message": "galat insert register"}, 500
+
+            return {"message": "data berhasil disimpan"}, 201
+            
+        return {"message": "User ini tidak memiliki hak akses untuk menambahkan status"}, 403
 
 
 @bp.route('/vessels/<vessel_id>', methods=['GET', 'POST'])

@@ -435,6 +435,13 @@ def approval(id_container):
         if container is None:
             return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
 
+        # MEMBUAT QRCODE SETELAH DISETUJUI KE LVL 3
+        import utils.generate_qrcode as qr
+        try:
+            qr.generate_qr(id_container)
+        except:
+            return {"message": "document berhasil diapprove, namun qrcode tidak berhasil dibuat"}, 302
+
         return jsonify(container), 201
 
     elif claims["isAgent"]:

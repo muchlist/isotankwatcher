@@ -6,5 +6,7 @@ def generate_qr(id : str):
     #pastikan ada folder bernama qr didalam folder static
     #URL nya doc
     qr = pyqrcode.create(f'http://192.168.1.1/doc/{id}')
-    path = os.path.join("static","qr", f"{id}.png")
+    current_dir = os.getcwd()
+    path = os.path.join(current_dir, "static","qr", f"{id}.png")
+    print(path)
     qr.png(path, scale=8)

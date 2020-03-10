@@ -8,5 +8,4 @@ def generate_qr(id : str):
     qr = pyqrcode.create(f'http://192.168.1.1/doc/{id}')
     current_dir = os.getcwd()
     path = os.path.join(current_dir, "static","qr", f"{id}.png")
-    print(path)
     qr.png(path, scale=8)

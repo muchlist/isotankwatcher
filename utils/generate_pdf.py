@@ -89,7 +89,7 @@ def generate_pdf(dc):
     status = dc["status"]
     data = [["WAKTU", "LOKASI", "OLEH", "SAKSI", "CATATAN", "STATUS"], ]
     for st in status:
-        data.append([para(st["checked_at"].strftime("%d %b %H:%M:%S")), st["check_position"],
+        data.append([para(st["checked_at"].strftime("%d %b %H:%M:%S")), para(st["check_position"]),
                      para(st["checked_by_name"]), para(st["witness"]), para(st["note"]), para(st["status"])])
 
     tblstyle = TableStyle([

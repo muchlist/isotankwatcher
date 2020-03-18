@@ -178,7 +178,7 @@ def generate_pdf(dc):
     TANDA TANGAN
     """
     # cek apakah qr code ada
-    img = Image(Config.UPLOADED_IMAGES_DEST + "qr.png", width=80, height=80)
+    img = Image(Config.UPLOADED_IMAGES_DEST + "finger_print.png", width=80, height=80)
     if ospath.isfile(Config.CUSTOM_QR_PATH + str(dc['_id']) + ".png"):
         img = Image(Config.CUSTOM_QR_PATH + str(dc['_id']) + ".png", width=80, height=80)
 

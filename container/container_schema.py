@@ -29,8 +29,6 @@ class ContainerInitSchema(Schema):
     int_dom = fields.Str(required=True)
     # doc_level: 1
     # last_status = fields.Str(required=True)
-    # approval_foreman = fields.Bool(required=True)
-    # approval_agent = fields.Bool(required=True)
     # creator_username = fields.Str(required=True)
     # creator_name = fields.Str(required=True)
     # created_at = fields.DateTime(required=False)

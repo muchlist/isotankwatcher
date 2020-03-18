@@ -129,9 +129,7 @@ def get_container_list():
                 "int_dom": data["int_dom"].upper(),
 
                 # AUTO
-                "approval_foreman": False,
                 "approval_foreman_name": "",
-                "approval_agent": False,
                 "approval_agent_name": "",
                 "creator_username": get_jwt_identity(),
                 "creator_name": claims["name"],
@@ -148,7 +146,6 @@ def get_container_list():
             if request.args.get("blank"):
                 # jika blank data insert dimasukkan status kosong
                 data_insert["status"] = []
-                data_insert["last_status"] = "INIT"
             else:
                 # JIKA TIDAK BLANK
                 try:
@@ -170,7 +167,6 @@ def get_container_list():
 
                 # jika tidak blank data insert dimasukkan status
                 data_insert["status"] = [status_insert]
-                data_insert["last_status"] = data["status"].upper()
 
             try:
                 mongo.db.container.insert_one(data_insert)
@@ -371,7 +367,6 @@ def change_lvl_form_3_to_1(id_container):
             '$set': {
                 "document_level": 1,
                 "updated_at": datetime.now(),
-                "approval_foreman": False,
                 "approval_foreman_name": f"Dibatalkan - {claims['name']}"
             }
         }
@@ -391,8 +386,8 @@ def change_lvl_form_3_to_1(id_container):
 
 """
 approval digunakan bisa oleh foreman atau oleh agent dengan syarat dokumen harus 
-ber lvl 2 ke 3 untuk foreman
-ber lvl 3 ke 4 untuk agent
+ber lvl 2 ke 3 untuk foreman, membuat qrcode
+ber lvl 3 ke 4 untuk agent, membuat pdf
 """
 @bp.route('/containers/<id_container>/approval', methods=['POST'])
 @jwt_required
@@ -411,6 +406,8 @@ def approval(id_container):
 
     # JIKA foreman harus lvl 2 ke lvl 3
     # JIKA Agent harus lvl 3 ke lvl 4
+    # APPROVAL BY FOREMAN
+    # MEMBUAT QRCODE
     if claims["isForeman"]:
 
         query = {
@@ -421,7 +418,6 @@ def approval(id_container):
         update = {
             '$set': {
                 "document_level": 3,
-                "approval_foreman": True,
                 "approval_foreman_name": claims["name"],
                 "updated_at": datetime.now()
             }
@@ -435,27 +431,29 @@ def approval(id_container):
         if container is None:
             return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
 
-        # MEMBUAT QRCODE SETELAH DISETUJUI KE LVL 3
+        # MEMBUAT QRCODE START SETELAH DISETUJUI KE LVL 3
         import utils.generate_qrcode as qr
         try:
             qr.generate_qr(id_container)
         except:
             return {"message": "document berhasil diapprove, namun qrcode tidak berhasil dibuat"}, 302
+        # MEMBUAT QRCODE END
 
         return jsonify(container), 201
 
+    # APPROVAL BY AGENT
+    # MEMBUAT PDF
     elif claims["isAgent"]:
 
         query = {
             '_id': ObjectId(id_container),
-            "updated_at": data["updated_at"],
-            "document_level": 3,
+            #"updated_at": data["updated_at"],
+            #"document_level": 3,
             "agent": claims["company"]
         }
         update = {
             '$set': {
                 "document_level": 4,
-                "approval_agent": True,
                 "approval_agent_name": claims["name"],
                 "updated_at": datetime.now()
             }
@@ -468,6 +466,17 @@ def approval(id_container):
 
         if container is None:
             return {"message": "Gagal update. Dokumen belum disetujui pihak Pelindo atau Dokumen berbeda Perusahaan."}, 406
+
+        # MEMBUAT PDF START SETELAH DISETUJUI KE LVL 4
+
+        import utils.generate_pdf as pdfgen
+        pdfgen.generate_pdf(container)
+        # try:
+        #     pdfgen.generate_pdf(container)
+        # except:
+        #     return {"message": "document berhasil diapprove, namun pdf tidak berhasil dibuat"}, 302
+
+        # MEMBUAT PDF END
 
         return jsonify(container), 201
     else:

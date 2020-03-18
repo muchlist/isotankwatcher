@@ -15,9 +15,9 @@ from utils.image_helper import IMAGE_SET
 
 app = Flask(__name__)
 app.config.from_object('config.Config')
-# app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
-# app.config["UPLOADED_IMAGES_DEST"] = os.environ.get("UPLOADED_IMAGES_DEST")
-# app.config["JWT_SECRET_KEY "] = os.environ.get("SECRET_KEY")
+# app.config["MONGO_URI"] = Config.MONGO_URI
+# app.config["UPLOADED_IMAGES_DEST"] = Config.UPLOADED_IMAGES_DEST
+# app.config["JWT_SECRET_KEY "] = Config.JWT_SECRET_KEY
 patch_request_class(app, 6 * 1024 * 1024)  # 6MB max upload
 configure_uploads(app, IMAGE_SET)
 

@@ -100,7 +100,6 @@ def register_user():
 def user_admin(username):
 
     isAdmin = get_jwt_claims()["isAdmin"]
-    print("hasil print", isAdmin)
     if not isAdmin:
         return {"message": "Edit hanya dapat dilakukan oleh admin"}, 403
 
@@ -137,6 +136,31 @@ def user_admin(username):
             mongo.db.users.remove({"username": username})
             return {"message": f"user {username} berhasil dihapus"}, 201
         return {"message": f"user {username} tidak ditemukan"}
+
+
+@bp.route('/admin/reset/<string:username>', methods=['GET'])
+@jwt_required
+def reset_password_by_admin(username):
+
+    isAdmin = get_jwt_claims()["isAdmin"]
+    if not isAdmin:
+        return {"message": "Edit hanya dapat dilakukan oleh admin"}, 403
+
+    if request.method == 'GET':
+        if user_eksis(username):
+            # hash password
+            pw_hash = bcrypt.generate_password_hash("Password").decode("utf-8")
+
+            find = {"username": username}
+            update = {
+                "password": pw_hash
+            }
+
+            mongo.db.users.update_one(find, {'$set': update})
+
+            return {"message": f"Password user {username} berhasil direset"}, 201
+
+        return {"message": f"user {username} tidak ditemukan"}, 404
 
 
 @bp.route("/users/<string:username>", methods=['GET', 'PUT'])

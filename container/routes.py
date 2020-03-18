@@ -447,8 +447,8 @@ def approval(id_container):
 
         query = {
             '_id': ObjectId(id_container),
-            #"updated_at": data["updated_at"],
-            #"document_level": 3,
+            "updated_at": data["updated_at"],
+            "document_level": 3,
             "agent": claims["company"]
         }
         update = {
@@ -470,11 +470,10 @@ def approval(id_container):
         # MEMBUAT PDF START SETELAH DISETUJUI KE LVL 4
 
         import utils.generate_pdf as pdfgen
-        pdfgen.generate_pdf(container)
-        # try:
-        #     pdfgen.generate_pdf(container)
-        # except:
-        #     return {"message": "document berhasil diapprove, namun pdf tidak berhasil dibuat"}, 302
+        try:
+            pdfgen.generate_pdf(container)
+        except:
+            return {"message": "document berhasil diapprove, namun pdf tidak berhasil dibuat"}, 302
 
         # MEMBUAT PDF END
 

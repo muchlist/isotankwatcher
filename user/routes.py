@@ -144,7 +144,7 @@ def reset_password_by_admin(username):
 
     isAdmin = get_jwt_claims()["isAdmin"]
     if not isAdmin:
-        return {"message": "Edit hanya dapat dilakukan oleh admin"}, 403
+        return {"message": "Reset password hanya dapat dilakukan oleh admin"}, 403
 
     if request.method == 'GET':
         if user_eksis(username):

@@ -54,7 +54,7 @@ def generate_pdf(dc):
         ["KONTAINER", f': {dc["container_number"]}', "KAPAL",  f': {dc["vessel"]}'],
         ["UKURAN", f': {dc["size"]} FEET', "VOYAGE",  f': {dc["voyage"]}'],
         ["TIPE",  f': {dc["tipe"]}', "INT/DOM",  f': {dc["int_dom"]}'],
-        ["STATUS",  f': {dc["full_or_empty"]}', "TANGGAL",  f': {dc["created_at"].strftime("%d %b %Y %H:%M:%S")}'],
+        ["STATUS",  f': {dc["full_or_empty"]}', "TANGGAL",  f': {dc["created_at"].strftime("%d %b %Y %H:%M")}'],
         ["AKTIFITAS",  f': {dc["activity"]}', "", ""]
     ]
 
@@ -89,7 +89,7 @@ def generate_pdf(dc):
     status = dc["status"]
     data = [["WAKTU", "LOKASI", "OLEH", "SAKSI", "CATATAN", "STATUS"], ]
     for st in status:
-        data.append([para(st["checked_at"].strftime("%d %b %H:%M:%S")), para(st["check_position"]),
+        data.append([para(st["checked_at"].strftime("%d %b %H:%M")), para(st["check_position"]),
                      para(st["checked_by_name"]), para(st["witness"]), para(st["note"]), para(st["status"])])
 
     tblstyle = TableStyle([
@@ -100,7 +100,7 @@ def generate_pdf(dc):
         ('VALIGN', (0, 1), (-1, -1), "TOP"),
     ])
 
-    tbl = Table(data, colWidths=[30*mm, 20*mm, 25*mm, 25*mm, 70*mm, 20*mm])
+    tbl = Table(data, colWidths=[25*mm, 25*mm, 25*mm, 25*mm, 70*mm, 20*mm])
     tbl.setStyle(tblstyle)
     story.append(tbl)
     story.append(Spacer(0, 10))

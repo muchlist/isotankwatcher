@@ -12,6 +12,7 @@ from container.routes import bp as container_bp
 from vessel.routes import bp as vessel_bp
 from container_image.routes import bp as container_image_bp
 from container_info.routes import bp as container_info_bp
+from container_check.routes import bp as container_check_bp
 from utils.image_helper import IMAGE_SET
 
 app = Flask(__name__)
@@ -47,6 +48,7 @@ app.register_blueprint(container_bp)
 app.register_blueprint(vessel_bp)
 app.register_blueprint(container_image_bp)
 app.register_blueprint(container_info_bp)
+app.register_blueprint(container_check_bp)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

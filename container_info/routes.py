@@ -29,6 +29,7 @@ bp = Blueprint('container_info_bp', __name__, url_prefix='/api')
 """
 -------------------------------------------------------------------------------
 CONTAINER LIST AND CREATE CONTAINER
+-------------------------------------------------------------------------------
 """
 @bp.route('/containers', methods=['GET', 'POST'])
 @jwt_required
@@ -85,11 +86,6 @@ def get_container_list():
 
     if request.method == 'POST':
 
-        """
-        INIT DATA TIDAK BISA DILAKUKAN OLEH AGENT, Hanya bisa dilakukan oleh
-        tally
-        """
-
         if not claims["isTally"]:
             return {"message": "user tidak memiliki hak akses untuk menambahkan data"}, 403
 
@@ -132,7 +128,7 @@ def get_container_list():
                 "one": "",
                 "two": "",
                 "three": "",
-                "five": ""
+                "four": ""
             }
         }
 
@@ -148,6 +144,7 @@ def get_container_list():
 """
 -------------------------------------------------------------------------------
 CONTAINER DETAIL, UBAH DAN HAPUS
+-------------------------------------------------------------------------------
 """
 @bp.route('/containers/<id_container>', methods=['GET', 'PUT', 'DELETE'])
 @jwt_required
@@ -225,7 +222,8 @@ def get_container_detail(id_container):
 
             # Hanya dokumen level 1 yang bisa di delete
             if container["document_level"] == 1:
-                mongo.db.container_info.delete_one({'_id': ObjectId(id_container)})
+                mongo.db.container_info.delete_one(
+                    {'_id': ObjectId(id_container)})
                 return {"message": "Dokumen berhasil di hapus"}, 204
 
             return {"message": "Dokumen yang sudah dilakukan pengecekan tidak dapat dihapus"}, 406

@@ -151,11 +151,10 @@ CONTAINER DETAIL, UBAH DAN HAPUS
 def get_container_detail(id_container):
 
     claims = get_jwt_claims()
+    if not ObjectId.is_valid(id_container):
+        return {"message": "Object ID tidak valid"}, 400
 
     if request.method == 'GET':
-        if not ObjectId.is_valid(id_container):
-            return {"message": "Object ID tidak valid"}, 400
-
         container = mongo.db.container_info.find_one(
             {'_id': ObjectId(id_container)})
         return jsonify(container), 200
@@ -210,22 +209,16 @@ def get_container_detail(id_container):
         return jsonify(container), 201
 
     if request.method == 'DELETE':
-
         """
         DELETE HANYA DAPAT DILAKUKAN PADA DOKUMEN LVL 1 OLEH FOREMAN
         """
-
         if claims["isForeman"] or claims["isAdmin"]:
-
-            container = mongo.db.container_info.find_one(
-                {'_id': ObjectId(id_container)}, {"document_level": 1})
-
-            # Hanya dokumen level 1 yang bisa di delete
-            if container["document_level"] == 1:
-                mongo.db.container_info.delete_one(
-                    {'_id': ObjectId(id_container)})
-                return {"message": "Dokumen berhasil di hapus"}, 204
-
-            return {"message": "Dokumen yang sudah dilakukan pengecekan tidak dapat dihapus"}, 406
+            query = {'_id': ObjectId(id_container),
+                     'branch': claims["branch"][0],
+                     'document_level': 1}
+            container = mongo.db.container_info.find_one_and_delete(query)
+            if container is None:
+                return {"message": "Dokumen yang sudah dilakukan pengecekan tidak dapat dihapus"}, 406
+            return {"message": "Dokumen berhasil di hapus"}, 204
 
         return {"message": "Dokumen hanya bisa di hapus oleh Manajer atau Foreman"}, 403

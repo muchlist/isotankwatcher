@@ -15,6 +15,7 @@ from bson.objectid import ObjectId
 
 from container_check.container_check_schema import (
     ContainerCheckInitSchema,
+    ContainerCheckEditSchema,
 )
 
 from datetime import datetime
@@ -54,7 +55,8 @@ def create_check_container(container_id, step):
         '_id': ObjectId(container_id)
     }
     update = {
-        '$set': {f"checkpoint.{step}": f"{container_id}-{step}"}
+        '$set': {f"checkpoint.{step.lower()}": f"{container_id}-{step.lower()}",
+                 "document_level": 2}
     }
     try:
         container_info = mongo.db.container_info.find_one_and_update(
@@ -96,6 +98,7 @@ def create_check_container(container_id, step):
         "container": container_data_embed,
         "updated_at": datetime.now(),
         "position":  computed_position,
+        "position_step": step.lower(),
         "checked_at": data["checked_at"],
         "note": data["note"],
         "status": data["status"],
@@ -124,13 +127,44 @@ Detail Check Container, GET PUT
 def get_detail_check_container(check_id):
 
     if request.method == "GET":
-        claims = get_jwt_claims()
-
         container_check = mongo.db.container_check.find_one(
             {'_id': check_id})
         return jsonify(container_check), 200
 
-    #TODO PUT
+    if request.method == "PUT":
+        schema = ContainerCheckEditSchema()
+        try:
+            data = schema.load(request.get_json())
+        except ValidationError as err:
+            return err.messages, 400
+
+        claims = get_jwt_claims()
+        if not claims["isTally"]:
+            return {"message": "user tidak memiliki hak akses untuk menambahkan data"}, 403
+
+        query = {
+            '_id': check_id,
+            'updated_at': data["updated_at"],
+            'doc_level': 1,
+            'container.branch': claims["branch"][0]
+        }
+        update = {
+            '$set': {
+                'checked_at': data["checked_at"],
+                'note': data["note"],
+                'status': data["status"],
+                'witness': data["witness"],
+                'updated_at': datetime.now()
+            }
+        }
+        try:
+            container_check = mongo.db.container_check.find_one_and_update(
+                query, update, return_document=True)
+        except:
+            return {"message": "galat insert pada container_info"}, 500
+        if container_check == None:
+            return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
+        return jsonify(container_check), 201
 
 
 def translate_step(activity, step):
@@ -143,8 +177,8 @@ def translate_step(activity, step):
                         "three": "UNSTACK",
                         "four": "GATE OUT"}
     if activity == "RECEIVING-MUAT":
-        return receiving_muat[step]
+        return receiving_muat[step.lower()]
     elif activity == "BONGKAR-DELIVERY":
-        return bongkar_delivery[step]
+        return bongkar_delivery[step.lower()]
     else:
         return None

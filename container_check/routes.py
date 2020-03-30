@@ -2,12 +2,8 @@ from db import mongo
 
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
-    create_access_token,
-    create_refresh_token,
     get_jwt_identity,
-    jwt_refresh_token_required,
     jwt_required,
-    get_raw_jwt,
     get_jwt_claims,
 )
 from marshmallow import ValidationError
@@ -51,12 +47,19 @@ def create_check_container(container_id, step):
         return {"message": "user tidak memiliki hak akses untuk menambahkan data"}, 403
 
     # DATABASE CONTAINER_INFO BEGIN
+    switch = {
+        "one": 1, #1 info container init , 2 check one created, 3 check one finish
+        "two": 3, #4 check two created, 5 check two finish
+        "three": 5, #6 check three created, 7 check three finish
+        "four": 7, #8 check four created, 9 check four dinish document finish
+    }
     query = {
-        '_id': ObjectId(container_id)
+        '_id': ObjectId(container_id),
+        'document_level': switch.get(step)
     }
     update = {
-        '$set': {f"checkpoint.{step.lower()}": f"{container_id}-{step.lower()}",
-                 "document_level": 2}
+        '$set': {f"checkpoint.{step.lower()}": f"{container_id}-{step.lower()}"},
+        '$inc': {"document_level": 1}
     }
     try:
         container_info = mongo.db.container_info.find_one_and_update(
@@ -65,7 +68,7 @@ def create_check_container(container_id, step):
         return {"message": "galat insert pada container_info"}, 500
 
     if container_info is None:
-        return {"message": "container id salah"}, 400
+        return {"message": "container id atau step update salah"}, 400
     # DATABASE END
 
     computed_position = translate_step(container_info["activity"], step)

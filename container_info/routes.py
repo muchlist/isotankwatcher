@@ -2,12 +2,8 @@ from db import mongo
 
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
-    create_access_token,
-    create_refresh_token,
     get_jwt_identity,
-    jwt_refresh_token_required,
     jwt_required,
-    get_raw_jwt,
     get_jwt_claims,
 )
 from marshmallow import ValidationError
@@ -41,7 +37,7 @@ def get_container_list():
 
         """ 
         ?branch=SAMPIT    
-        &  document_level=1 (lvl 1 s/d 5) 
+        &  document_level=1 (lvl 1 s/d 9) 
         &  agent=MERATUS 
         & page=1
         &  search=""
@@ -67,7 +63,7 @@ def get_container_list():
         if document_level:
             # Jika dokumen lvl dimasukkan 0 maka untuk memunculkan doc lvl selain 5
             if document_level == "0":
-                find["document_level"] = {'$in': [1, 2, 3, 4]}
+                find["document_level"] = {'$ne': 9} #NOT EQUAL 9 karena 9 Dokumen Finish
             else:
                 find["document_level"] = int(document_level)
         if agent:

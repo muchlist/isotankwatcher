@@ -48,10 +48,10 @@ def create_check_container(container_id, step):
 
     # DATABASE CONTAINER_INFO BEGIN
     switch = {
-        "one": 1, #1 info container init , 2 check one created, 3 check one finish
-        "two": 3, #4 check two created, 5 check two finish
-        "three": 5, #6 check three created, 7 check three finish
-        "four": 7, #8 check four created, 9 check four dinish document finish
+        "one": 1,  # 1 info container init , 2 check one created, 3 check one finish
+        "two": 3,  # 4 check two created, 5 check two finish
+        "three": 5,  # 6 check three created, 7 check three finish
+        "four": 7,  # 8 check four created, 9 check four dinish document finish
     }
     query = {
         '_id': ObjectId(container_id),
@@ -180,8 +180,8 @@ def translate_step(activity, step):
                         "three": "UNSTACK",
                         "four": "GATE OUT"}
     if activity == "RECEIVING-MUAT":
-        return receiving_muat[step.lower()]
+        return receiving_muat.get(step.lower())
     elif activity == "BONGKAR-DELIVERY":
-        return bongkar_delivery[step.lower()]
+        return bongkar_delivery.get(step.lower())
     else:
         return None

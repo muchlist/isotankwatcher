@@ -25,6 +25,12 @@ bp = Blueprint('container_info_bp', __name__, url_prefix='/api')
 """
 -------------------------------------------------------------------------------
 CONTAINER LIST AND CREATE CONTAINER
+
+document_level
+1 info container init , 2 check one created, 3 check one finish
+4 check two created, 5 check two finish
+6 check three created, 7 check three finish
+8 check four created, 9 check four finish document finish
 -------------------------------------------------------------------------------
 """
 @bp.route('/containers', methods=['GET', 'POST'])

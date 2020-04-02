@@ -2,7 +2,6 @@ from db import mongo
 
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
-    get_jwt_identity,
     jwt_required,
     get_jwt_claims,
 )
@@ -18,7 +17,7 @@ import string
 import random
 
 # Set up a Blueprint
-bp = Blueprint('container_image_bp', __name__)
+bp = Blueprint('container_image_bp', __name__, url_prefix='/api')
 
 
 @bp.route('/upload/image/<container_check_id>/<position>', methods=['POST'])

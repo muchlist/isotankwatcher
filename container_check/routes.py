@@ -81,8 +81,8 @@ def create_check_container(container_id, step):
     approval_data_embed = {
         "checked_by": get_jwt_identity(),
         "checked_by_name": claims["name"],
-        "approval_foreman": "",
-        "approval_foreman_name": "",
+        "foreman": "",
+        "foreman_name": "",
         "witness": data["witness"],
         "witness_note": ""
     }
@@ -118,6 +118,42 @@ def create_check_container(container_id, step):
     # DATABASE container check END
 
     return jsonify(data_insert), 201
+
+
+"""
+-------------------------------------------------------------------------------
+Container Check list, GET
+hanya mengembalikan list check lvl 2 (yang mana belum diapprove oleh foreman)
+-------------------------------------------------------------------------------
+"""
+@bp.route('/checks', methods=['GET'])
+@jwt_required
+def get_check_container_list():
+    claims = get_jwt_claims()
+    if request.method == 'GET':
+
+        """ 
+        ?branch=SAMPIT    
+        &  doc_level=2 
+        """
+
+        branch = request.args.get("branch")
+
+        # find database
+        find = {}
+        find["doc_level"] = 2
+        if branch:
+            find["container.branch"] = branch
+
+        container_check_coll = mongo.db.container_check.find(
+            find).sort("updated_at", -1)
+        container_check_list = []
+
+        for container_check in container_check_coll:
+            container_check_list.append(container_check)
+
+        return {"container_checks": container_check_list}, 200
+
 
 
 """

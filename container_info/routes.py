@@ -131,6 +131,12 @@ def get_container_list():
                 "two": "",
                 "three": "",
                 "four": ""
+            },
+            "checkpoint_status": {
+                "one": "",
+                "two": "",
+                "three": "",
+                "four": ""
             }
         }
 

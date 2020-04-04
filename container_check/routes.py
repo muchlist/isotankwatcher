@@ -58,7 +58,9 @@ def create_check_container(container_id, step):
         'document_level': switch.get(step)
     }
     update = {
-        '$set': {f"checkpoint.{step.lower()}": f"{container_id}-{step.lower()}"},
+        # Memasukkan ID check dan Status dan Note Pengecekan ke Container Info
+        '$set': {f"checkpoint.{step.lower()}": f"{container_id}-{step.lower()}",
+                 f"checkpoint_status.{step.lower()}": f'{data["status"]} : {data["note"]}'},
         '$inc': {"document_level": 1}
     }
     try:
@@ -155,7 +157,6 @@ def get_check_container_list():
         return {"container_checks": container_check_list}, 200
 
 
-
 """
 -------------------------------------------------------------------------------
 Detail Check Container, GET PUT
@@ -197,12 +198,28 @@ def get_detail_check_container(check_id):
             }
         }
         try:
+            #Update container check
             container_check = mongo.db.container_check.find_one_and_update(
                 query, update, return_document=True)
         except:
             return {"message": "galat insert pada container_info"}, 500
+
         if container_check == None:
             return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
+        else:
+            # Container Check Berhasil diubah, Container Info juga Perlu di ubah
+            query = {
+                '_id': ObjectId(container_check["container_id"])
+            }
+            update = {'$set':
+                      {f'checkpoint_status.{container_check["position_step"]}':
+                          f'{container_check["status"]} : {container_check["note"]}'}
+                      }
+            try:
+                mongo.db.container_info.find_one_and_update(
+                    query, update, return_document=False)
+            except:
+                return {"message": "galat update pada container_info"}, 500
         return jsonify(container_check), 201
 
 

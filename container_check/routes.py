@@ -13,6 +13,7 @@ from container_check.container_check_schema import (
     ContainerCheckInitSchema,
     ContainerCheckEditSchema,
 )
+import utils.generate_qrcode as qr
 
 from datetime import datetime
 import string
@@ -119,6 +120,9 @@ def create_check_container(container_id, step):
         return {"message": "galat insert container_check, kemungkinan data sudah ada"}, 500
     # DATABASE container check END
 
+    # CREATE QR CODE
+    create_qr_code(f"{container_id}-{step}")
+
     return jsonify(data_insert), 201
 
 
@@ -198,7 +202,7 @@ def get_detail_check_container(check_id):
             }
         }
         try:
-            #Update container check
+            # Update container check
             container_check = mongo.db.container_check.find_one_and_update(
                 query, update, return_document=True)
         except:
@@ -238,3 +242,11 @@ def translate_step(activity, step):
         return bongkar_delivery.get(step.lower())
     else:
         return None
+
+
+def create_qr_code(container_check_id):
+    # MEMBUAT QRCODE Untuk setiap container check
+    try:
+        qr.generate_qr(container_check_id)  # qr/container_check_id.png
+    except:
+        return {"message": "document berhasil dibuat, namun qrcode gagal"}, 302

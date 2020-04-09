@@ -197,7 +197,7 @@ def get_detail_check_container(check_id):
                 'checked_at': data["checked_at"],
                 'note': data["note"],
                 'status': data["status"],
-                'witness': data["witness"],
+                'approval.witness': data["witness"],
                 'updated_at': datetime.now()
             }
         }

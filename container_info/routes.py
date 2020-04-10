@@ -126,6 +126,7 @@ def get_container_list():
             "creator_name": claims["name"],
             "updated_at": datetime.now(),
             "document_level": 1,
+            "dammaged": False,
             "checkpoint": {
                 "one": "",
                 "two": "",

@@ -148,7 +148,9 @@ def approval_foreman_doc(check_id):
     if container_check is None:
         return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
     else:
-        lvl_up_container_info_lvl(container_check["container_id"])
+        #CEK APAKAH STATUS TIDAK SAMA DENGAN NIHIL
+        dammaged = container_check["status"] != "NIHIL"
+        lvl_up_container_info_lvl(container_check["container_id"], dammaged)
 
     # if container_check["position_step"] == "four":
     #     # TODO BIKIN PDF
@@ -156,9 +158,13 @@ def approval_foreman_doc(check_id):
     return jsonify(container_check), 201
 
 
-def lvl_up_container_info_lvl(container_id):
+def lvl_up_container_info_lvl(container_id, dammaged):
     query = {'_id': ObjectId(container_id)}
     update = {'$inc': {"document_level": 1}}
+    
+    if dammaged:
+        update["dammaged"] = True
+
     try:
         mongo.db.container_info.find_one_and_update(
             query, update, return_document=False)

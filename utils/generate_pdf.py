@@ -1,4 +1,3 @@
-from db import mongo
 from bson.objectid import ObjectId
 import datetime
 
@@ -12,10 +11,11 @@ from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
 
 
-def generate_pdf(dc):
+def generate_pdf(data_info, data_check):
+
     # A4 = (210*mm,297*mm)
     path = Config.CUSTOM_PDF_PATH
-    doc = SimpleDocTemplate(f'{path}{dc["_id"]}.pdf',
+    doc = SimpleDocTemplate(f'{path}{data_check["_id"]}.pdf',
                             pagesize=A4,
                             rightMargin=72,
                             leftmargin=72,
@@ -51,11 +51,15 @@ def generate_pdf(dc):
     DATA DETAIL KONTAINER
     """
     data = [
-        ["KONTAINER", f': {dc["container_number"]}', "KAPAL",  f': {dc["vessel"]}'],
-        ["UKURAN", f': {dc["size"]} FEET', "VOYAGE",  f': {dc["voyage"]}'],
-        ["TIPE",  f': {dc["tipe"]}', "INT/DOM",  f': {dc["int_dom"]}'],
-        ["STATUS",  f': {dc["full_or_empty"]}', "TANGGAL",  f': {dc["created_at"].strftime("%d %b %Y %H:%M")}'],
-        ["AKTIFITAS",  f': {dc["activity"]}', "", ""]
+        ["KONTAINER", f': {data_info["container_number"]}',
+            "KAPAL",  f': {data_info["vessel"]}'],
+        ["UKURAN", f': {data_info["size"]} FEET',
+            "VOYAGE",  f': {data_info["voyage"]}'],
+        ["TIPE",  f': {data_info["tipe"]}',
+            "INT/DOM",  f': {data_info["int_dom"]}'],
+        ["STATUS",  f': {data_info["full_or_empty"]}', "TANGGAL",
+            f': {data_info["created_at"].strftime("%d %b %Y %H:%M")}'],
+        ["AKTIFITAS",  f': {data_info["activity"]}', "", ""]
     ]
 
     tbl = Table(data, colWidths=[27*mm, 57*mm, 27*mm, 77*mm])
@@ -86,11 +90,9 @@ def generate_pdf(dc):
     -------------------------------------------------------------------------
     DATA STATUS PENGECEKAN
     """
-    status = dc["status"]
-    data = [["WAKTU", "LOKASI", "OLEH", "SAKSI", "CATATAN", "STATUS"], ]
-    for st in status:
-        data.append([para(st["checked_at"].strftime("%d %b %H:%M")), para(st["check_position"]),
-                     para(st["checked_by_name"]), para(st["witness"]), para(st["note"]), para(st["status"])])
+    data = [["WAKTU", "LOKASI", "CATATAN", "STATUS"], ]
+    data.append([para(data_check["checked_at"].strftime("%d %b %H:%M")), para(data_check["position"]),
+                 para(data_check["note"]), para(data_check["status"])])
 
     tblstyle = TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
@@ -100,7 +102,7 @@ def generate_pdf(dc):
         ('VALIGN', (0, 1), (-1, -1), "TOP"),
     ])
 
-    tbl = Table(data, colWidths=[25*mm, 25*mm, 25*mm, 25*mm, 70*mm, 20*mm])
+    tbl = Table(data, colWidths=[30*mm, 30*mm, 105*mm, 25*mm])
     tbl.setStyle(tblstyle)
     story.append(tbl)
     story.append(Spacer(0, 10))
@@ -129,6 +131,8 @@ def generate_pdf(dc):
     -------------------------------------------------------------------------
     FOTO
     """
+
+    image_data = data_check["image"]
     path_img = Config.UPLOADED_IMAGES_DEST
     img_back = "[    ]"
     img_bottom = "[    ]"
@@ -137,19 +141,19 @@ def generate_pdf(dc):
     img_right = "[    ]"
     img_up = "[    ]"
 
-    if dc["url_img_back"]:
-        img_back = scale_image(path_img + dc["url_img_back"], 55*mm)
-    if dc["url_img_bottom"]:
-        img_bottom = scale_image(path_img + dc["url_img_bottom"], 55*mm)
-    if dc["url_img_front"]:
-        img_front = scale_image(path_img + dc["url_img_front"], 55*mm)
-    if dc["url_img_left"]:
-        img_left = scale_image(path_img + dc["url_img_left"], 55*mm)
-    if dc["url_img_right"]:
-        img_right = scale_image(path_img + dc["url_img_right"], 55*mm)
-    if dc["url_img_up"]:
-        img_up = scale_image(path_img + dc["url_img_up"], 55*mm)
-
+    if image_data["url_img_back"]:
+        img_back = scale_image(path_img + image_data["url_img_back"], 55*mm)
+    if image_data["url_img_bottom"]:
+        img_bottom = scale_image(
+            path_img + image_data["url_img_bottom"], 55*mm)
+    if image_data["url_img_front"]:
+        img_front = scale_image(path_img + image_data["url_img_front"], 55*mm)
+    if image_data["url_img_left"]:
+        img_left = scale_image(path_img + image_data["url_img_left"], 55*mm)
+    if image_data["url_img_right"]:
+        img_right = scale_image(path_img + image_data["url_img_right"], 55*mm)
+    if image_data["url_img_up"]:
+        img_up = scale_image(path_img + image_data["url_img_up"], 55*mm)
 
     # img_back = scale_image(path_img + "2020B2/" +
     #                   "5e455b48496a4923018ce99b-M9PTQ.jpg", 55*mm)
@@ -178,21 +182,30 @@ def generate_pdf(dc):
     TANDA TANGAN
     """
     # cek apakah qr code ada
-    img = Image(Config.UPLOADED_IMAGES_DEST + "finger_print.png", width=80, height=80)
-    if ospath.isfile(Config.CUSTOM_QR_PATH + str(dc['_id']) + ".png"):
-        img = Image(Config.CUSTOM_QR_PATH + str(dc['_id']) + ".png", width=80, height=80)
+    img = Image(Config.UPLOADED_IMAGES_DEST +
+                "finger_print.png", width=90, height=90)
+    if ospath.isfile(Config.CUSTOM_QR_PATH + str(data_check['_id']) + ".png"):
+        img = Image(Config.CUSTOM_QR_PATH +
+                    str(data_check['_id']) + ".png", width=90, height=90)
+
+    # cek apakah foto saksi ada
+    img_witness = Image(Config.UPLOADED_IMAGES_DEST +
+                        "finger_print.png", width=90, height=90)
+    if data_check["image"]["url_img_witness"]:
+        img_witness = scale_image(path_img + image_data["url_img_witness"], 90)
 
     data = [
-        [f'{dc["agent"]}', "PELINDO III"],
-        [img, img],
-        [f'{dc["approval_agent_name"]}', f'{dc["approval_foreman_name"]}'],
+        ["SAKSI", "PETUGAS", "FOREMAN"],
+        [img_witness, img, img],
+        [data_check["approval"]["witness"].upper(), data_check["approval"]["checked_by_name"],
+            data_check["approval"]["foreman_name"]],
     ]
     tblstyle = TableStyle([
         ('BOX', (0, 0), (-1, -1), 0.1, colors.grey),
         ('VALIGN', (0, 0), (-1, -1), "MIDDLE"),
         ('ALIGN', (0, 0), (-1, -1), "CENTER"),
     ])
-    tbl = Table(data, colWidths=[95*mm, 95*mm])
+    tbl = Table(data, colWidths=[63*mm, 63*mm, 63*mm])
     tbl.setStyle(tblstyle)
     story.append(tbl)
 
@@ -235,7 +248,3 @@ def scale_image(image: str, desire_width: int) -> Image:
         desire_width * aspect), hAlign='CENTER')
 
     return img
-
-
-if __name__ == "__main__":
-    generate_pdf()

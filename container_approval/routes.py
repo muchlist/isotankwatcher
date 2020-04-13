@@ -12,6 +12,7 @@ from bson.objectid import ObjectId
 from container_approval.container_approval_schema import ContainerApprovalSchema
 
 from datetime import datetime
+from utils import generate_pdf as gl
 
 
 # Set up a Blueprint
@@ -155,9 +156,28 @@ def approval_foreman_doc(check_id):
         container_info = lvl_up_container_info_lvl(
             container_check["container_id"], dammaged, forced)
 
-    #     # TODO BIKIN PDF
+        # MEMBUAT PDF START
+        try:
+            gl.generate_pdf(container_info, container_check)
+        except:
+            return {"message": "Gagal membuat pdf!"}, 403
+        # MEMBUAT PDF END
 
     return jsonify(container_check), 201
+
+
+# """
+# -------------------------------------------------------------------------------
+# TESTING PDF
+# -------------------------------------------------------------------------------
+# """
+# @bp.route('/testingpdf', methods=['GET'])
+# @jwt_required
+# def approval_test_pdf():
+#     container_check = mongo.db.container_check.find_one({'_id': '5e941dceef9192a71313687a-one'})
+#     container_info = mongo.db.container_info.find_one({'_id': ObjectId('5e941dceef9192a71313687a')})
+#     gl.generate_pdf(container_info, container_check)
+#     return jsonify(container_check), 201
 
 
 def lvl_up_container_info_lvl(container_id, dammaged, forced_lvl):
@@ -165,7 +185,7 @@ def lvl_up_container_info_lvl(container_id, dammaged, forced_lvl):
     update = {'$inc': {"document_level": 1}}
     set_embed = {}
     if forced_lvl:
-        update = {} #jika force maka hilangakan increment
+        update = {}  # jika force maka hilangakan increment
         set_embed["document_level"] = 9  # tindih dengan naik langsung ke lvl 9
     if dammaged:
         set_embed["dammaged"] = True

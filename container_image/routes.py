@@ -63,7 +63,7 @@ def upload_image(container_check_id, position):
         if container is None:
             return {"message": "container check id salah"}, 400
             
-        return {"message": f"image {image_path} uploaded"}, 201
+        return {"message": image_path}, 201
 
     except UploadNotAllowed:
         extension = image_helper.get_extension(data['image'])

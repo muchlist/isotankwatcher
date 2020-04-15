@@ -323,12 +323,12 @@ def pass_check_container(container_id, step, activity):
 
 def translate_step(activity, step):
     receiving_muat = {"one": "GATE IN",
-                      "two": "STACK",
-                      "three": "UNSTACK",
+                      "two": "CY-STACK",
+                      "three": "CY-UNSTACK (Muat)",
                       "four": "DERMAGA"}
     bongkar_delivery = {"one": "DERMAGA",
-                        "two": "STACK",
-                        "three": "UNSTACK",
+                        "two": "CY-STACK",
+                        "three": "CY-UNSTACK (Delivery)",
                         "four": "GATE OUT"}
     if activity == "RECEIVING-MUAT":
         return receiving_muat.get(step.lower())

@@ -4,3 +4,10 @@ class Config(object):
     JWT_SECRET_KEY=
 
     CUSTOM_QR_PATH="static/qr/"
+    CUSTOM_PDF_PATH="static/pdf/"
+
+    """
+    pastikan ada folder images, profile, qr
+    ada file finger_print.png , pelindo_logo
+    di dalam folder static
+    """

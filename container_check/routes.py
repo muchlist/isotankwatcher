@@ -321,6 +321,70 @@ def pass_check_container(container_id, step, activity):
     return jsonify(container_info), 200
 
 
+"""
+-------------------------------------------------------------------------------
+Menyalin gambar dari container check sebelumnya
+-------------------------------------------------------------------------------
+"""
+@bp.route('/copy-photo-to/<container_check_id>', methods=['GET'])
+@jwt_required
+def copy_photo_check_container(container_check_id):
+    claims = get_jwt_claims()
+    stepdata = get_step_from_container_check_id(container_check_id)
+    check_id_without_step = stepdata[0]
+    step = stepdata[1]
+
+    if step == "one":
+        return {"message": "tidak dapat melakukan copy image pada step one"}, 400
+
+    if not claims["isTally"]:
+        return {"message": "user tidak memiliki hak akses untuk menambahkan data"}, 403
+
+    step_list = ["one", "two", "three", "four"]
+    step_map = {
+        "one": 1,
+        "two": 2,
+        "three": 3,
+        "four": 4
+    }
+
+    container_check_data = None
+    for x in range(step_map.get(step)-1, 0, -1):
+        container_check_id_before = f"{check_id_without_step}-{step_list[x - 1]}"
+        container_check_data = mongo.db.container_check.find_one(
+            {'_id': container_check_id_before})
+        if container_check_data is not None:
+            break
+
+    query = {
+        '_id': container_check_id,
+        'doc_level': 1
+    }
+    update = {
+        '$set': {
+            'image.url_img_back': container_check_data["image"]["url_img_back"],
+            'image.url_img_bottom': container_check_data["image"]["url_img_bottom"],
+            'image.url_img_front': container_check_data["image"]["url_img_front"],
+            'image.url_img_left': container_check_data["image"]["url_img_left"],
+            'image.url_img_right': container_check_data["image"]["url_img_right"],
+            'image.url_img_up': container_check_data["image"]["url_img_up"],
+        }
+    }
+    container_check_data = mongo.db.container_check.find_one_and_update(
+        query, update, return_document=True)
+    if container_check_data is None:
+        return {"message": "Tidak dapat melakukan update image saat document sudah ready"}, 400
+
+    return jsonify(container_check_data), 200
+
+
+def get_step_from_container_check_id(container_check_id):
+    # index 0 = container id
+    # index 1 = container step
+    splitted = container_check_id.split("-")
+    return splitted
+
+
 def translate_step(activity, step):
     receiving_muat = {"one": "GATE IN",
                       "two": "CY-STACK",

@@ -163,12 +163,21 @@ def reset_password_by_admin(username):
         return {"message": f"user {username} tidak ditemukan"}, 404
 
 
-@bp.route("/users/<string:username>", methods=['GET', 'PUT'])
+@bp.route("/users/<string:username>", methods=['GET'])
 @jwt_required
 def user(username):
     if request.method == 'GET':
         result = mongo.db.users.find_one(
             {"username": username}, {"password": 0})
+        return jsonify(result), 200
+
+
+@bp.route("/profile", methods=['GET'])
+@jwt_required
+def show_profile():
+    if request.method == 'GET':
+        result = mongo.db.users.find_one(
+            {"username": get_jwt_identity()}, {"password": 0})
         return jsonify(result), 200
 
 

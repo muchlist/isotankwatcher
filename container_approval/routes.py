@@ -166,18 +166,18 @@ def approval_foreman_doc(check_id):
     return jsonify(container_check), 201
 
 
-# """
-# -------------------------------------------------------------------------------
-# TESTING PDF
-# -------------------------------------------------------------------------------
-# """
-# @bp.route('/testingpdf', methods=['GET'])
-# @jwt_required
-# def approval_test_pdf():
-#     container_check = mongo.db.container_check.find_one({'_id': '5e941dceef9192a71313687a-one'})
-#     container_info = mongo.db.container_info.find_one({'_id': ObjectId('5e941dceef9192a71313687a')})
-#     gl.generate_pdf(container_info, container_check)
-#     return jsonify(container_check), 201
+"""
+-------------------------------------------------------------------------------
+TESTING PDF
+-------------------------------------------------------------------------------
+"""
+@bp.route('/testingpdf', methods=['GET'])
+@jwt_required
+def approval_test_pdf():
+    container_check = mongo.db.container_check.find_one({'_id': '5e941dceef9192a71313687a-one'})
+    container_info = mongo.db.container_info.find_one({'_id': ObjectId('5e941dceef9192a71313687a')})
+    gl.generate_pdf(container_info, container_check)
+    return jsonify(container_check), 201
 
 
 def lvl_up_container_info_lvl(container_id, dammaged, forced_lvl):

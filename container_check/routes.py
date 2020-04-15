@@ -17,7 +17,6 @@ from container_check.container_check_schema import (
 import utils.generate_qrcode as qr
 
 from datetime import datetime
-import string
 
 # Set up a Blueprint
 bp = Blueprint('container_check_bp', __name__, url_prefix='/api')

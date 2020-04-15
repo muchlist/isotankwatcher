@@ -28,9 +28,9 @@ def generate_pdf(data_info, data_check):
     DATA HEADER
     """
     img_path = Config.UPLOADED_IMAGES_DEST
-    img = Image(img_path + "pelindo_logo.png", 68, 50, hAlign='CENTER')
+    img_qr_code = Image(img_path + "pelindo_logo.png", 68, 50, hAlign='CENTER')
     data = [
-        [img, "Sistem Manajemen\nMutu, Keselamatan & Kesehatan Kerja, Keamanan, dan Lingkungan"],
+        [img_qr_code, "Sistem Manajemen\nMutu, Keselamatan & Kesehatan Kerja, Keamanan, dan Lingkungan"],
         ["", "FORMULIR\nCONTAINER DAMAGE REPORT"]
     ]
 
@@ -78,7 +78,7 @@ def generate_pdf(data_info, data_check):
     tblstyle = TableStyle([
         ('GRID', (0, 0), (0, 0), 0.25, colors.black),
         ('ROWBACKGROUNDS', (0, 0), (0, 0), [colors.lightblue]),
-        ('ALIGN', (0, 0), (0, 0), 'CENTER')
+        ('ALIGN', (0, 0), (0, 0), 'LEFT')
     ])
 
     tbl = Table(data, colWidths=[190*mm])
@@ -102,7 +102,7 @@ def generate_pdf(data_info, data_check):
         ('VALIGN', (0, 1), (-1, -1), "TOP"),
     ])
 
-    tbl = Table(data, colWidths=[30*mm, 30*mm, 105*mm, 25*mm])
+    tbl = Table(data, colWidths=[30*mm, 30*mm, 95*mm, 35*mm])
     tbl.setStyle(tblstyle)
     story.append(tbl)
     story.append(Spacer(0, 10))
@@ -119,7 +119,7 @@ def generate_pdf(data_info, data_check):
     tblstyle = TableStyle([
         ('GRID', (0, 0), (0, 0), 0.25, colors.black),
         ('ROWBACKGROUNDS', (0, 0), (0, 0), [colors.lightblue]),
-        ('ALIGN', (0, 0), (0, 0), 'CENTER')
+        ('ALIGN', (0, 0), (0, 0), 'LEFT')
     ])
 
     tbl = Table(data, colWidths=[190*mm])
@@ -181,22 +181,51 @@ def generate_pdf(data_info, data_check):
     -------------------------------------------------------------------------
     TANDA TANGAN
     """
+    img_finger_print = Image(Config.UPLOADED_IMAGES_DEST +
+                             "finger_print.png", width=90, height=90)
+
     # cek apakah qr code ada
-    img = Image(Config.UPLOADED_IMAGES_DEST +
-                "finger_print.png", width=90, height=90)
+    img_qr_code = img_finger_print
     if ospath.isfile(Config.CUSTOM_QR_PATH + str(data_check['_id']) + ".png"):
-        img = Image(Config.CUSTOM_QR_PATH +
-                    str(data_check['_id']) + ".png", width=90, height=90)
+        img_qr_code = Image(Config.CUSTOM_QR_PATH +
+                            str(data_check['_id']) + ".png", width=90, height=90)
 
     # cek apakah foto saksi ada
-    img_witness = Image(Config.UPLOADED_IMAGES_DEST +
-                        "finger_print.png", width=90, height=90)
+    img_witness = img_finger_print
     if data_check["image"]["url_img_witness"]:
         img_witness = scale_image(path_img + image_data["url_img_witness"], 90)
 
+    # cek apakah foto tally ada
+    # mengisi image tally dengan finger print
+    img_tally = img_finger_print
+    # membuat path untuk image profil
+    folder = "profile"
+    file_name = f'{data_check["approval"]["checked_by"]}.jpg'
+    img_tally_path = ospath.join(
+        path_img, folder, file_name)
+    # cek apakah foto tally ada, jika ada isi img_tally dengan profil
+    if ospath.isfile(img_tally_path):
+        img_tally = scale_image(img_tally_path, 90)
+
+    # cek apakah foto foreman ada
+    # mengisi image foreman dengan finger print
+    img_foreman = img_finger_print
+    # membuat path untuk image profil
+    folder = "profile"
+    file_name = f'{data_check["approval"]["foreman"]}.jpg'
+    img_foreman_path = ospath.join(
+        path_img, folder, file_name)
+    # cek apakah foto foreman ada, jika ada isi img_foreman dengan profil
+    if ospath.isfile(img_foreman_path):
+        img_foreman = scale_image(img_foreman_path, 90)
+
+    # karena tiap step pengecekan siapa yang menjadi saksi berbeda2 profesi
+    saksi = get_saksi(data_check["container"]
+                      ["activity"], data_check["position_step"])
+
     data = [
-        ["SAKSI", "PETUGAS", "FOREMAN"],
-        [img_witness, img, img],
+        [saksi, "TALLY", "FOREMAN/MANAGER"],
+        [img_witness, img_tally, img_foreman],
         [data_check["approval"]["witness"].upper(), data_check["approval"]["checked_by_name"],
             data_check["approval"]["foreman_name"]],
     ]
@@ -218,10 +247,16 @@ def generate_pdf(data_info, data_check):
     data = [
         [para("""Catatan : Setiap kerusakan pada kontainer atau kargo yang ditemukan
      sebelum kontainer dibongkar dari kapal bukan tanggung jawab dari
-     PT. PELABUHAN INDONESIA III""")],
+     PT. PELABUHAN INDONESIA III"""), img_qr_code]
     ]
 
-    tbl = Table(data, colWidths=[190*mm])
+    tblstyle = TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.1, colors.grey),
+        ('VALIGN', (0, 0), (0, 0), "TOP"),
+        ('ALIGN', (0, 0), (-1, -1), "CENTER"),
+    ])
+    tbl = Table(data, colWidths=[126*mm, 63*mm])
+    tbl.setStyle(tblstyle)
     story.append(tbl)
 
     doc.build(story)
@@ -240,11 +275,38 @@ def scale_image(image: str, desire_width: int) -> Image:
     Menginputkan path image dan width dan mengembalikan scaled image
     """
 
-    img = ImageReader(image)
-    img_width, img_height = img.getSize()
+    img_qr_code = ImageReader(image)
+    img_width, img_height = img_qr_code.getSize()
     aspect = img_height / float(img_width)
 
-    img = Image(image, width=desire_width, height=(
+    img_qr_code = Image(image, width=desire_width, height=(
         desire_width * aspect), hAlign='CENTER')
 
-    return img
+    return img_qr_code
+
+
+def get_saksi(activity, step):
+    saksi = ""
+    if activity == "RECEIVING-MUAT":
+        if step == "one":
+            saksi = "SOPIR TRUCK"
+        elif step == "two":
+            saksi = "OPERATOR"
+        elif step == "three":
+            saksi = "OPERATOR"
+        elif step == "four":
+            saksi = "PIHAK KAPAL"
+        else:
+            saksi = "SAKSI"
+
+    if activity == "BONGKAR-DELIVERY":
+        if step == "one":
+            saksi = "PIHAK KAPAL"
+        elif step == "two":
+            saksi = "OPERATOR"
+        elif step == "three":
+            saksi = "SOPIR TRUCK"
+        else:
+            saksi = "SAKSI"
+
+    return saksi

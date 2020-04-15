@@ -8,7 +8,6 @@ from db import mongo
 from utils.my_encoder import JSONEncoder
 from utils.my_bcrypt import bcrypt
 from user.routes import bp as user_bp
-from container.routes import bp as container_bp
 from vessel.routes import bp as vessel_bp
 from container_image.routes import bp as container_image_bp
 from container_info.routes import bp as container_info_bp
@@ -45,7 +44,6 @@ def add_claims_to_jwt(identity):
 
 
 app.register_blueprint(user_bp)
-app.register_blueprint(container_bp)
 app.register_blueprint(vessel_bp)
 app.register_blueprint(container_image_bp)
 app.register_blueprint(container_info_bp)

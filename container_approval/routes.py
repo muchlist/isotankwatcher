@@ -183,14 +183,14 @@ def approval_foreman_doc(check_id):
 def lvl_up_container_info_lvl(container_id, dammaged, forced_lvl):
     query = {'_id': ObjectId(container_id)}
     update = {'$inc': {"document_level": 1}}
-    set_embed = {}
+    set_embed = {'updated_at': datetime.now()}
     if forced_lvl:
         update = {}  # jika force maka hilangakan increment
         set_embed["document_level"] = 9  # tindih dengan naik langsung ke lvl 9
     if dammaged:
         set_embed["dammaged"] = True
-    if set_embed != {}:
-        update['$set'] = set_embed
+    
+    update['$set'] = set_embed
 
     try:
         container_info = mongo.db.container_info.find_one_and_update(

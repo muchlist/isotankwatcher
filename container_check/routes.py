@@ -12,6 +12,7 @@ from bson.objectid import ObjectId
 from container_check.container_check_schema import (
     ContainerCheckInitSchema,
     ContainerCheckEditSchema,
+    ContainerCheckPassSchema
 )
 import utils.generate_qrcode as qr
 
@@ -60,8 +61,11 @@ def create_check_container(container_id, step):
     }
     update = {
         # Memasukkan ID check dan Status dan Note Pengecekan ke Container Info
-        '$set': {f"checkpoint.{step.lower()}": f"{container_id}-{step.lower()}",
-                 f"checkpoint_status.{step.lower()}": f'{data["status"]} : {data["note"]}'},
+        '$set': {
+            f"checkpoint.{step.lower()}": f"{container_id}-{step.lower()}",
+            f"checkpoint_status.{step.lower()}": f'{data["status"]} : {data["note"]}',
+            'updated_at': datetime.now()
+        },
         '$inc': {"document_level": 1}
     }
     try:
@@ -225,6 +229,96 @@ def get_detail_check_container(check_id):
             except:
                 return {"message": "galat update pada container_info"}, 500
         return jsonify(container_check), 201
+
+
+"""
+-------------------------------------------------------------------------------
+PASS Check Container Position
+permintaan tambahan dari pak gm sehingga harus merubah urutan step karena
+ternyata ada step yang sifatnya optional,
+ini menjadi tambalan kode yang seharusnya merubah struktur sebelumnya
+-------------------------------------------------------------------------------
+"""
+@bp.route('/pass-check/<container_id>/<step>/<activity>', methods=['POST'])
+@jwt_required
+def pass_check_container(container_id, step, activity):
+
+    claims = get_jwt_claims()
+
+    if not ObjectId.is_valid(container_id):
+        return {"message": "Object ID tidak valid"}, 400
+
+    if not step in ("two", "three"):
+        return {"message": "step harus diantara two, three"}, 400
+
+    if not activity in ("RECEIVING-MUAT", "BONGKAR-DELIVERY"):
+        return {"message": "activity harus diantara RECEIVING-MUAT, BONGKAR-DELIVERY"}, 400
+
+    schema = ContainerCheckPassSchema()
+    try:
+        data = schema.load(request.get_json())
+    except ValidationError as err:
+        return err.messages, 400
+
+    if not claims["isTally"]:
+        return {"message": "user tidak memiliki hak akses untuk merubah data"}, 403
+
+    # DATABASE CONTAINER_INFO BEGIN
+    if activity == "RECEIVING-MUAT":
+        switch = {
+            "two": [3, 4],  # 3 check one finish, 4 check two created
+            "three": [5, 6],  # 5 check two finish, 6 check three created,
+        }
+    else:
+        switch = {
+            # PADA Aktifitas BONGKAR DELIVERY TIDAK DIIJINKAN PASS step three
+            # di buat angka salah (0) sehingga pada querry dia akan gagal ditemukan
+            "two": [3, 4],  # 3 check one finish, 4 check two created
+            "three": [0, ],  # 5 check two finish, 6 check three created,
+        }
+    # db.inventory.find ( { quantity: { $in: [20, 50] } } ) <- example
+    query = {
+        '_id': ObjectId(container_id),
+        'document_level': {'$in': switch.get(step)},
+        'activity': activity,
+        'updated_at': data["updated_at"]
+    }
+
+    # Jika dokumen yang dipass step two maka document lvl akan lompat ke 5
+    # Jika dokumen yang dipass step two maka document lvl akan lompat ke 7
+    if step == "two":
+        document_level_update = 5
+    else:
+        document_level_update = 7
+
+    update = {
+        # Memasukkan ID check dan Status dan Note Pengecekan ke Container Info
+        '$set': {
+            f"checkpoint.{step.lower()}": "PASS",
+            f"checkpoint_status.{step.lower()}": "PASS",
+            "document_level": document_level_update,
+            'updated_at': datetime.now()
+        },
+
+    }
+    try:
+        container_info = mongo.db.container_info.find_one_and_update(
+            query, update, return_document=True)
+    except:
+        return {"message": "galat insert pada container_info"}, 500
+
+    if container_info is None:
+        return {"message": "PASS Document tidak memenuhi syarat, atau data update terakhir salah"}, 400
+    # DATABASE CONTAINER_INFO END
+
+    # DATABASE container check BEGIN
+    try:
+        mongo.db.container_check.remove({'_id': f"{container_id}-{step}"})
+    except:
+        return {"message": "galat delete pada container_check"}, 500
+    # DATABASE container check END
+
+    return jsonify(container_info), 200
 
 
 def translate_step(activity, step):

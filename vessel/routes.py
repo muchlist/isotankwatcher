@@ -22,6 +22,9 @@ bp = Blueprint('vessel_bp', __name__)
 @bp.route('/vessels', methods=['GET', 'POST'])  # ?search=
 @jwt_required
 def get_vessel_list():
+
+    claims = get_jwt_claims()
+
     if request.method == 'GET':
 
         search = request.args.get("search")

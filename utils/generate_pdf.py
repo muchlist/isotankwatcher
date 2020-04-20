@@ -54,7 +54,7 @@ def generate_pdf(data_info, data_check):
     nopol = ""
     if data_check["nopol"] != "":
         nopol_title = "TRUCK"
-        nopol = data_check["nopol"].upper()
+        nopol = f': {data_check["nopol"].upper()}''
 
     data = [
         ["KONTAINER", f': {data_info["container_number"]}',
@@ -64,7 +64,7 @@ def generate_pdf(data_info, data_check):
         ["TIPE",  f': {data_info["tipe"]}',
             "INT/DOM",  f': {data_info["int_dom"]}'],
         ["STATUS",  f': {data_info["full_or_empty"]}', nopol_title,
-            f': {nopol}'],
+            nopol],
         ["AKTIFITAS",  f': {data_info["activity"]}', "TANGGAL",
             f': {data_info["created_at"].strftime("%d %b %Y %H:%M")}']
     ]

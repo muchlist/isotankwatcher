@@ -54,7 +54,7 @@ def generate_pdf(data_info, data_check):
     nopol = ""
     if data_check["nopol"] != "":
         nopol_title = "TRUCK"
-        nopol = f': {data_check["nopol"].upper()}''
+        nopol = f': {data_check["nopol"].upper()}'
 
     data = [
         ["KONTAINER", f': {data_info["container_number"]}',

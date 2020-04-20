@@ -50,6 +50,12 @@ def generate_pdf(data_info, data_check):
     -------------------------------------------------------------------------
     DATA DETAIL KONTAINER
     """
+    nopol_title = ""
+    nopol = ""
+    if data_check["nopol"] != "":
+        nopol_title = "TRUCK"
+        nopol = data_check["nopol"].upper()
+
     data = [
         ["KONTAINER", f': {data_info["container_number"]}',
             "KAPAL",  f': {data_info["vessel"]}'],
@@ -57,9 +63,10 @@ def generate_pdf(data_info, data_check):
             "VOYAGE",  f': {data_info["voyage"]}'],
         ["TIPE",  f': {data_info["tipe"]}',
             "INT/DOM",  f': {data_info["int_dom"]}'],
-        ["STATUS",  f': {data_info["full_or_empty"]}', "TANGGAL",
-            f': {data_info["created_at"].strftime("%d %b %Y %H:%M")}'],
-        ["AKTIFITAS",  f': {data_info["activity"]}', "", ""]
+        ["STATUS",  f': {data_info["full_or_empty"]}', nopol_title,
+            f': {nopol}'],
+        ["AKTIFITAS",  f': {data_info["activity"]}', "TANGGAL",
+            f': {data_info["created_at"].strftime("%d %b %Y %H:%M")}']
     ]
 
     tbl = Table(data, colWidths=[27*mm, 57*mm, 27*mm, 77*mm])

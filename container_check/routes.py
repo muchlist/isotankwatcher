@@ -111,6 +111,7 @@ def create_check_container(container_id, step):
         "checked_at": data["checked_at"],
         "note": data["note"],
         "status": data["status"],
+        "nopol": data["nopol"],
         "image":  image_embed,
         "approval": approval_data_embed,
         "doc_level": 1,
@@ -200,6 +201,7 @@ def get_detail_check_container(check_id):
                 'checked_at': data["checked_at"],
                 'note': data["note"],
                 'status': data["status"],
+                "nopol": data["nopol"],
                 'approval.witness': data["witness"],
                 'updated_at': datetime.now()
             }

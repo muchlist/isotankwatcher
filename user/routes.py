@@ -52,7 +52,7 @@ def register_user():
             return err.messages, 400
 
         # mengecek user eksisting
-        if user_eksis(data["username"]):
+        if user_eksis(data["username"].upper()):
             return {"message": "nama pengguna tidak tersedia"}, 406
 
         # verifify inputan can be null
@@ -78,7 +78,7 @@ def register_user():
             "password": pw_hash,
             "email": data["email"],
             "phone": data["phone"],
-            "name": data["name"],
+            "name": data["name"].upper(),
             "isAdmin": data["isAdmin"],
             "isForeman": data["isForeman"],
             "isTally": data["isTally"],
@@ -113,7 +113,7 @@ def user_admin(username):
         if user_eksis(username):
             find = {"username": username}
             update = {
-                "name": data["name"],
+                "name": data["name"].upper(),
                 "email": data["email"],
                 "phone": data["phone"],
                 "isAdmin": data["isAdmin"],
@@ -170,6 +170,19 @@ def user(username):
         result = mongo.db.users.find_one(
             {"username": username}, {"password": 0})
         return jsonify(result), 200
+
+
+@bp.route("/getuser/<name>", methods=['GET'])
+@jwt_required
+def user_by_name(name):
+    if request.method == 'GET':
+        query_string = {'$regex': f'.*{name.upper()}.*'}
+        user_collection = mongo.db.users.find(
+            {"name": query_string}, {"password": 0})
+        user_list = []
+        for user in user_collection:
+            user_list.append(user)
+        return {"users": user_list}, 200
 
 
 @bp.route("/profile", methods=['GET'])

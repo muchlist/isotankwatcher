@@ -252,9 +252,7 @@ def generate_pdf(data_info, data_check):
     Disclaimer
     """
     data = [
-        [para("""Catatan : Setiap kerusakan pada kontainer atau kargo yang ditemukan
-     sebelum kontainer dibongkar dari kapal bukan tanggung jawab dari
-     PT. PELABUHAN INDONESIA III"""), img_qr_code]
+        [para("""Generate by E-CDR Pelindo III Bagendang"""), img_qr_code]
     ]
 
     tblstyle = TableStyle([

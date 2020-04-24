@@ -65,8 +65,8 @@ def generate_pdf(data_info, data_check):
             "INT/DOM",  f': {data_info["int_dom"]}'],
         ["STATUS",  f': {data_info["full_or_empty"]}', nopol_title,
             nopol],
-        ["AKTIFITAS",  f': {data_info["activity"]}', "TANGGAL",
-            f': {data_info["created_at"].strftime("%d %b %Y %H:%M")}']
+        ["AKTIFITAS",  f': {get_position_activity(data_check["container"]["activity"], data_check["position_step"])}',
+         "TANGGAL", f': {data_info["created_at"].strftime("%d %b %Y %H:%M")}']
     ]
 
     tbl = Table(data, colWidths=[27*mm, 57*mm, 27*mm, 77*mm])
@@ -165,8 +165,8 @@ def generate_pdf(data_info, data_check):
     # img_back = scale_image(path_img + "2020B2/" +
     #                   "5e455b48496a4923018ce99b-M9PTQ.jpg", 55*mm)
     data = [
-        [img_up, img_front, img_left],
-        [img_bottom, img_back, img_right],
+        [img_front, img_left, img_up],
+        [img_back, img_right, img_bottom],
     ]
     tblstyle = TableStyle([
         ('VALIGN', (0, 0), (-1, -1), "MIDDLE"),
@@ -315,5 +315,34 @@ def get_saksi(activity, step):
             saksi = "SOPIR TRUCK"
         else:
             saksi = "SAKSI"
+
+    return saksi
+
+
+def get_position_activity(activity, step):
+    saksi = ""
+    if activity == "RECEIVING-MUAT":
+        if step == "one":
+            saksi = "GATE IN (R)"
+        elif step == "two":
+            saksi = "CY LIFT-OFF (R)"
+        elif step == "three":
+            saksi = "CY LIFT-ON (R)"
+        elif step == "four":
+            saksi = "MUAT"
+        else:
+            saksi = "RECEIVING-MUAT"
+
+    if activity == "BONGKAR-DELIVERY":
+        if step == "one":
+            saksi = "BONGKAR"
+        elif step == "two":
+            saksi = "CY LIFT-OFF (D)"
+        elif step == "three":
+            saksi = "DELIVERY-LIFT-ON (D)"
+        elif step == "four":
+            saksi = "GATE OUT (D)"
+        else:
+            saksi = "BONGKAR-DELIVERY"
 
     return saksi

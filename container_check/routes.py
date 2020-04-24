@@ -249,8 +249,8 @@ def pass_check_container(container_id, step, activity):
     if not ObjectId.is_valid(container_id):
         return {"message": "Object ID tidak valid"}, 400
 
-    if not step in ("two", "three"):
-        return {"message": "step harus diantara two, three"}, 400
+    if not step in ("one", "two", "three", "four"):
+        return {"message": "step harus diantara one, two, three, four"}, 400
 
     if not activity in ("RECEIVING-MUAT", "BONGKAR-DELIVERY"):
         return {"message": "activity harus diantara RECEIVING-MUAT, BONGKAR-DELIVERY"}, 400
@@ -267,15 +267,18 @@ def pass_check_container(container_id, step, activity):
     # DATABASE CONTAINER_INFO BEGIN
     if activity == "RECEIVING-MUAT":
         switch = {
+            "one": [1, 2], # 1 document created, 2 check one created
             "two": [3, 4],  # 3 check one finish, 4 check two created
             "three": [5, 6],  # 5 check two finish, 6 check three created,
+            "four": [7, 8],  # 7 check three finish, 8 check four created,
         }
     else:
         switch = {
             # PADA Aktifitas BONGKAR DELIVERY TIDAK DIIJINKAN PASS step three
             # di buat angka salah (0) sehingga pada querry dia akan gagal ditemukan
+            "one": [1, 2], # 1 document created, 2 check one created
             "two": [3, 4],  # 3 check one finish, 4 check two created
-            "three": [0, ],  # 5 check two finish, 6 check three created,
+            "three": [5, 6],  # 5 check two finish, 6 check three created,
         }
     # db.inventory.find ( { quantity: { $in: [20, 50] } } ) <- example
     query = {
@@ -287,10 +290,19 @@ def pass_check_container(container_id, step, activity):
 
     # Jika dokumen yang dipass step two maka document lvl akan lompat ke 5
     # Jika dokumen yang dipass step two maka document lvl akan lompat ke 7
-    if step == "two":
+    if step == "one":
+        document_level_update = 3
+    elif step == "two":
         document_level_update = 5
+    elif step == "three":
+        # JIKA RECEIVING MUAT PASS AKAN KE LVL 7, NAMUN BONGKAR DELIVERY AKAN 
+        # KE LVL 9 KARENA RIDAK ADA GATEOUT
+        if activity == "RECEIVING-MUAT":
+            document_level_update = 7
+        else:
+            document_level_update = 9
     else:
-        document_level_update = 7
+        document_level_update = 9
 
     update = {
         # Memasukkan ID check dan Status dan Note Pengecekan ke Container Info

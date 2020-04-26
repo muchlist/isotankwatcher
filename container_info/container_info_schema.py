@@ -32,3 +32,12 @@ class ContainerEditInfoSchema(Schema):
     activity = fields.Str(required=True)
 
     updated_at = fields.DateTime(required=True)
+
+class ContainerEditVesselSchema(Schema):
+    int_dom = fields.Str(required=True)
+    vessel_id = fields.Str(required=True)
+    vessel = fields.Str(required=True)
+    voyage = fields.Str(required=True)
+    agent = fields.Str(required=True)
+
+    updated_at = fields.DateTime(required=True)

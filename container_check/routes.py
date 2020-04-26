@@ -90,7 +90,8 @@ def create_check_container(container_id, step):
         "foreman": "",
         "foreman_name": "",
         "witness": data["witness"],
-        "witness_note": ""
+        "witness_note": "",
+        "witness_approved": False
     }
     image_embed = {
         "url_img_back": "",

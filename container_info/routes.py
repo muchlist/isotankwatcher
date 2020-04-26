@@ -11,7 +11,8 @@ from bson.objectid import ObjectId
 
 from container_info.container_info_schema import (
     ContainerInitSchema,
-    ContainerEditInfoSchema
+    ContainerEditInfoSchema,
+    ContainerEditVesselSchema,
 )
 
 from datetime import datetime
@@ -219,9 +220,9 @@ def get_container_detail(id_container):
 
     if request.method == 'DELETE':
         """
-        DELETE HANYA DAPAT DILAKUKAN PADA DOKUMEN LVL 1 OLEH FOREMAN
+        DELETE HANYA DAPAT DILAKUKAN PADA DOKUMEN LVL 1 OLEH FOREMAN dan Tally
         """
-        if claims["isForeman"] or claims["isAdmin"]:
+        if claims["isForeman"] or claims["isTally"]:
             query = {'_id': ObjectId(id_container),
                      'branch': claims["branch"][0],
                      'document_level': 1}
@@ -231,3 +232,61 @@ def get_container_detail(id_container):
             return {"message": "Dokumen berhasil di hapus"}, 204
 
         return {"message": "Dokumen hanya bisa di hapus oleh Manajer atau Foreman"}, 403
+
+
+"""
+-------------------------------------------------------------------------------
+CONTAINER UBAH KAPAL
+-------------------------------------------------------------------------------
+"""
+@bp.route('/containers-change-vessel/<id_container>', methods=['PUT'])
+@jwt_required
+def change_vessel_container(id_container):
+    """Melakukan update informasi kapal info petikemas"""
+
+    schema = ContainerEditVesselSchema()
+    try:
+        data = schema.load(request.get_json())
+    except ValidationError as err:
+        return err.messages, 400
+
+    claims = get_jwt_claims()
+
+    if not ObjectId.is_valid(id_container):
+        return {"message": "Object ID tidak valid"}, 400
+    if not (claims["isTally"] or claims["isForeman"]):
+        return {"message": "user ini tidak dapat melakukan edit dokumen"}, 403
+
+    data_to_change = {
+        "vessel": data["vessel"].upper(),
+        "vessel_id": data["vessel_id"],
+        "voyage": data["voyage"].upper(),
+        "agent": data["agent"].upper(),
+        "int_dom": data["int_dom"].upper(),
+
+        "updated_at": datetime.now(),
+        "creator_username": get_jwt_identity(),
+        "creator_name": claims["name"]
+    }
+
+    # digunakan untuk memastikan tidak ada yang mengupdate sebelum update ini
+    last_update = data["updated_at"]
+
+    query = {'_id': ObjectId(id_container),
+                "updated_at": last_update,}
+    update = {'$set': data_to_change}
+
+    # MEMANGGIL DATABASE
+    container = mongo.db.container_info.find_one_and_update(
+        query, update, return_document=True)
+
+    if container is None:
+        return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
+    else:
+        query = {'container_id': id_container}
+        update = {'$set' : {'container.agent': data['agent'].upper()}}
+        mongo.db.container_check.update_many(query, update)
+
+    return jsonify(container), 201
+
+

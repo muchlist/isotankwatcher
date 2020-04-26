@@ -65,6 +65,49 @@ def check_to_ready_doc(check_id):
 
 """
 -------------------------------------------------------------------------------
+APPROVAL Witness , weak approval , jika sudah semua android di update,
+ganti approval tally untuk mengharuskan witness approved True terlebih dulu
+-------------------------------------------------------------------------------
+"""
+@bp.route('/check/<check_id>/witness-approve', methods=['POST'])
+@jwt_required
+def check_to_witness_approval(check_id):
+
+    claims = get_jwt_claims()
+
+    if not claims["isTally"]:
+        return {"message": "User tidak memiliki hak akses untuk merubah dokumen ini"}, 403
+
+    schema = ContainerApprovalSchema()
+    try:
+        data = schema.load(request.get_json())
+    except ValidationError as err:
+        return err.messages, 400
+
+    query = {
+        '_id': check_id,
+        "updated_at": data["updated_at"],
+        "doc_level": 1,
+        "container.branch": claims["branch"][0]
+    }
+    update = {
+        '$set': {"approval.witness_approved": True,
+                 "updated_at": datetime.now()}
+    }
+
+    # DATABASE
+    container_check = mongo.db.container_check.find_one_and_update(
+        query, update, return_document=True
+    )
+
+    if container_check is None:
+        return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
+
+    return jsonify(container_check), 201
+
+
+"""
+-------------------------------------------------------------------------------
 Batal APPROVAL dari Tally dari ke lvl 2 ke lvl 1
 -------------------------------------------------------------------------------
 """

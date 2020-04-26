@@ -214,11 +214,11 @@ def approval_foreman_doc(check_id):
 TESTING PDF
 -------------------------------------------------------------------------------
 """
-@bp.route('/testingpdf', methods=['GET'])
+@bp.route('/testingpdf/<container_id>/<check_id>', methods=['GET'])
 @jwt_required
 def approval_test_pdf():
-    container_check = mongo.db.container_check.find_one({'_id': '5e941dceef9192a71313687a-one'})
-    container_info = mongo.db.container_info.find_one({'_id': ObjectId('5e941dceef9192a71313687a')})
+    container_check = mongo.db.container_check.find_one({'_id': check_id})
+    container_info = mongo.db.container_info.find_one({'_id': ObjectId(container_id)})
     gl.generate_pdf(container_info, container_check)
     return jsonify(container_check), 201
 

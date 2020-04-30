@@ -216,7 +216,7 @@ TESTING PDF
 """
 @bp.route('/testingpdf/<container_id>/<check_id>', methods=['GET'])
 @jwt_required
-def approval_test_pdf():
+def approval_test_pdf(container_id, check_id):
     container_check = mongo.db.container_check.find_one({'_id': check_id})
     container_info = mongo.db.container_info.find_one({'_id': ObjectId(container_id)})
     gl.generate_pdf(container_info, container_check)

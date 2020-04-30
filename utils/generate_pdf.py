@@ -252,7 +252,7 @@ def generate_pdf(data_info, data_check):
     Disclaimer
     """
     data = [
-        [para("""Generate by E-CDR Pelindo III Bagendang"""), img_qr_code]
+        [para("\nGenerate by E-CDR Pelindo III Bagendang"), img_qr_code]
     ]
 
     tblstyle = TableStyle([

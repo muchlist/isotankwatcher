@@ -12,7 +12,7 @@ from marshmallow import ValidationError
 from container_report.container_report_schema import (
     ContainerReportSchema
 )
-from utils.pdf import generate_report_pdf as grp
+from utils.pdf_utils import generate_report_pdf as grp
 
 from datetime import datetime
 import random

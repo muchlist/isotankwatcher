@@ -79,7 +79,7 @@ def generate_pdf(pdf_name: str, data_check_list: list, start_date, end_date):
         position_check = get_position_activity(
             data_check_list[i]["container"]["activity"], data_check_list[i]["position_step"])
 
-        data.append([para(str(i+1)),
+        data.append([str(i+1),
                      para(data_check_list[i]["container"]["container_number"]),
                      para(data_check_list[i]["checked_at"].strftime(
                          "%d %b %H:%M")),
@@ -94,7 +94,7 @@ def generate_pdf(pdf_name: str, data_check_list: list, start_date, end_date):
         ('VALIGN', (0, 1), (-1, -1), "TOP"),
     ])
 
-    tbl = Table(data, colWidths=[10*mm, 50*mm,
+    tbl = Table(data, colWidths=[20*mm, 50*mm,
                                  30*mm, 50*mm, 40*mm])  # total 190
     tbl.setStyle(tblstyle)
     story.append(tbl)

@@ -12,7 +12,7 @@ from bson.objectid import ObjectId
 from container_approval.container_approval_schema import ContainerApprovalSchema
 
 from datetime import datetime
-from utils import generate_pdf as gl
+from utils.pdf import generate_pdf as gl
 
 
 # Set up a Blueprint

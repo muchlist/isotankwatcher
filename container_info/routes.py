@@ -70,7 +70,8 @@ def get_container_list():
         if document_level:
             # Jika dokumen lvl dimasukkan 0 maka untuk memunculkan doc lvl selain 5
             if document_level == "0":
-                find["document_level"] = {'$ne': 9} #NOT EQUAL 9 karena 9 Dokumen Finish
+                # NOT EQUAL 9 karena 9 Dokumen Finish
+                find["document_level"] = {'$ne': 9}
             else:
                 find["document_level"] = int(document_level)
         if agent:
@@ -236,6 +237,36 @@ def get_container_detail(id_container):
 
 """
 -------------------------------------------------------------------------------
+CONTAINER HAPUS BY ADMIN
+-------------------------------------------------------------------------------
+"""
+@bp.route('admin/containers/<id_container>', methods=['DELETE'])
+@jwt_required
+def delete_container_detail_by_admin(id_container):
+
+    claims = get_jwt_claims()
+    if not ObjectId.is_valid(id_container):
+        return {"message": "Object ID tidak valid"}, 400
+
+    if request.method == 'DELETE':
+        if claims["isAdmin"]:
+            # Delete Container Info
+            query = {'_id': ObjectId(id_container), }
+            container = mongo.db.container_info.find_one_and_delete(query)
+            if container is None:
+                return {"message": "Dokumen yang sudah dilakukan pengecekan tidak dapat dihapus"}, 406
+
+            # Delete Container Check
+            query = {'container_id': id_container, }
+            mongo.db.container_check.delete_many(query)
+
+            return {"message": "Dokumen berhasil di hapus"}, 204
+
+        return {"message": "Dokumen hanya bisa di hapus oleh Manajer atau Foreman"}, 403
+
+
+"""
+-------------------------------------------------------------------------------
 CONTAINER UBAH KAPAL
 -------------------------------------------------------------------------------
 """
@@ -273,7 +304,7 @@ def change_vessel_container(id_container):
     last_update = data["updated_at"]
 
     query = {'_id': ObjectId(id_container),
-                "updated_at": last_update,}
+             "updated_at": last_update, }
     update = {'$set': data_to_change}
 
     # MEMANGGIL DATABASE
@@ -284,9 +315,8 @@ def change_vessel_container(id_container):
         return {"message": "Gagal update. Dokumen ini telah di ubah oleh seseorang sebelumnya. Harap cek data terbaru!"}, 402
     else:
         query = {'container_id': id_container}
-        update = {'$set' : {'container.agent': data['agent'].upper()}}
+        update = {'$set': {'container.agent': data['agent'].upper()}}
         mongo.db.container_check.update_many(query, update)
 
     return jsonify(container), 201
-
 

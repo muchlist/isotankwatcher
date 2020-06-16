@@ -115,7 +115,7 @@ def create_check_container(container_id, step):
         "nopol": data["nopol"],
         "image":  image_embed,
         "approval": approval_data_embed,
-        "doc_level": 1,
+        "doc_level": 1, # 1 init , 2 approve by tally, 3 approve by manager or foreman
     }
 
     # DATABASE container check BEGIN
@@ -261,6 +261,7 @@ def pass_check_container(container_id, step, activity):
         data = schema.load(request.get_json())
     except ValidationError as err:
         return err.messages, 400
+        
 
     if not claims["isTally"]:
         return {"message": "user tidak memiliki hak akses untuk merubah data"}, 403

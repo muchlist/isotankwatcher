@@ -10,7 +10,7 @@ from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
 
 
-def generate_pdf(pdf_name: str, data_check_list: list, start_date, end_date):
+def generate_pdf(pdf_name: str, data_info_list: list, start_date, end_date):
 
     # A4 = (210*mm,297*mm)
     path = Config.CUSTOM_REPORT_PATH
@@ -30,7 +30,7 @@ def generate_pdf(pdf_name: str, data_check_list: list, start_date, end_date):
     img_qr_code = Image(img_path + "pelindo_logo.png", 68, 50, hAlign='CENTER')
     data = [
         [img_qr_code, "Sistem Manajemen\nMutu, Keselamatan & Kesehatan Kerja, Keamanan, dan Lingkungan"],
-        ["", "FORMULIR\nCONTAINER DAMAGE REPORT"]
+        ["", "CONTAINER DAMAGE REPORT"]
     ]
 
     # (SPAN, (begincol, beginrow), (endcol, endrow))
@@ -40,7 +40,7 @@ def generate_pdf(pdf_name: str, data_check_list: list, start_date, end_date):
         ('ALIGN', (0, 0), (-1, -1), 'CENTER')
     ])
 
-    tbl = Table(data, colWidths=[30*mm, 160*mm])
+    tbl = Table(data, colWidths=[35*mm, 165*mm])
     tbl.setStyle(tblstyle)
     story.append(tbl)
     story.append(Spacer(0, 10))
@@ -61,7 +61,7 @@ def generate_pdf(pdf_name: str, data_check_list: list, start_date, end_date):
         ('ALIGN', (0, 0), (0, 0), 'LEFT')
     ])
 
-    tbl = Table(data, colWidths=[190*mm])
+    tbl = Table(data, colWidths=[200*mm])
     tbl.setStyle(tblstyle)
     story.append(tbl)
     story.append(Spacer(0, 5))
@@ -70,21 +70,33 @@ def generate_pdf(pdf_name: str, data_check_list: list, start_date, end_date):
     -------------------------------------------------------------------------
     DATA PENGECEKAN
     """
-    data = [["NO", "NOMER KONTAINER", "WAKTU",
-             "POSISI", "STATUS", ]]
+    data = [["NO", "KONTAINER", "TANGGAL",
+             "TIPE", "KAPAL", "AKTIFITAS", "KERUSAKAN", "LOKASI"]]
 
-    for i in range(len(data_check_list)):
+    for i in range(len(data_info_list)):
 
-        # mendapatkan nama posisi pengecekan yang sesuai
-        position_check = get_position_activity(
-            data_check_list[i]["container"]["activity"], data_check_list[i]["position_step"])
+        # mendapatkan posisi kerusakan
+        _position_and_status_damagged = get_position_damaged(data_info_list[i]["checkpoint_status"], data_info_list[i]["activity"])
+        position_damage = _position_and_status_damagged[0]
+        status_damage = _position_and_status_damagged[1]
+        type_combo = f'{data_info_list[i]["tipe"]} {str(data_info_list[i]["size"])}'
+        vessel_combo = f'{data_info_list[i]["vessel"]} {data_info_list[i]["voyage"]}'
+        time = data_info_list[i]["created_at"].strftime(
+                         "%d %b %H:%M")
+        container_number = data_info_list[i]["container_number"]
+        activity = " - ".join(data_info_list[i]["activity"].split("-"))
 
-        data.append([str(i+1),
-                     para(data_check_list[i]["container"]["container_number"]),
-                     para(data_check_list[i]["checked_at"].strftime(
-                         "%d %b %H:%M")),
-                     para(position_check),
-                     para(data_check_list[i]["status"]), ])
+        print(position_damage)
+
+        data.append([para(str(i+1)),
+                     para(container_number),
+                     para(time),
+                     para(type_combo),
+                     para(vessel_combo),
+                     para(activity),
+                     para(status_damage),
+                     para(position_damage),
+                     ])
 
     tblstyle = TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
@@ -94,8 +106,8 @@ def generate_pdf(pdf_name: str, data_check_list: list, start_date, end_date):
         ('VALIGN', (0, 1), (-1, -1), "TOP"),
     ])
 
-    tbl = Table(data, colWidths=[20*mm, 50*mm,
-                                 30*mm, 50*mm, 40*mm])  # total 190
+    tbl = Table(data, colWidths=[13*mm, 35*mm, 25*mm, 17*mm,
+                                 33*mm, 25*mm, 25*mm, 27*mm])  # total 190
     tbl.setStyle(tblstyle)
     story.append(tbl)
     story.append(Spacer(0, 10))
@@ -139,3 +151,27 @@ def get_position_activity(activity, step):
             position = "BONGKAR-DELIVERY"
 
     return position
+
+def get_position_damaged(checkpoint_status, activity) -> (str, str):
+    nihil = "NIHIL"
+    passed = "PASS"
+    status_one = checkpoint_status["one"]
+    status_two = checkpoint_status["two"]
+    status_three = checkpoint_status["three"]
+    status_four = checkpoint_status["four"]
+
+    if not (status_one == "" or status_one == passed or nihil in status_one):
+        return [get_position_activity(activity, "one"), get_status(status_one)]
+    elif not (status_two == "" or status_one == passed or nihil in status_two):
+        return [get_position_activity(activity, "two"), get_status(status_two)]
+    elif not (status_three == "" or status_one == passed or nihil in status_three):
+        return [get_position_activity(activity, "three"), get_status(status_three)]
+    elif not (status_four == "" or status_one == passed or nihil in status_four):
+        return [get_position_activity(activity, "four"), get_status(status_four)]
+    else:
+        return ["NIHIL", "NIHIL"]
+
+def get_status(status):
+    if status == "":
+        return ""
+    return status.split(" :")[0]

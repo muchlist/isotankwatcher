@@ -109,14 +109,13 @@ def reports_info_container_list():
     activity = data["activity"] 
     damaged = data["damaged"]
 
-    activity_valid = ["RECEIVING-MUAT", "BONGKAR-DELIVERY"]
+    activity_valid = ["RECEIVING-MUAT", "BONGKAR-DELIVERY", "SEMUA"]
     if activity not in activity_valid:
         return {"message": "nama aktifitas tidak valid. Harus RECEIVING-MUAT atau BONGKAR-DELIVERY"}, 400
 
     # find database
     find_opt = {
         "branch": branch,
-        "activity": activity,
         "created_at": {
             '$gte': start_date,
             '$lte': end_date,
@@ -124,6 +123,8 @@ def reports_info_container_list():
             # '$lt' : datetime(2020,5,5),
         }
     }
+    if activity != "SEMUA":
+        find_opt["activity"] = activity
     if damaged:
         find_opt["damaged"] = True
 

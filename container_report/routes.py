@@ -71,13 +71,14 @@ def reports_check_container_list():
         container_check_list.append(container_check)
 
     if len(container_check_list) == 0:
-        return {"message": "data tidak ditemukan"}, 404
+        return {"message": "data tidak ditemukan"}, 204
 
     pdf_file_name = create_random_name()
 
     # MEMBUAT PDF START
     try:
-        pdf_check.generate_pdf(pdf_file_name, container_check_list, start_date, end_date)
+        pdf_check.generate_pdf(
+            pdf_file_name, container_check_list, start_date, end_date)
     except:
         return {"message": "Gagal membuat pdf!"}, 403
     # MEMBUAT PDF END
@@ -106,7 +107,7 @@ def reports_info_container_list():
     branch = data["branch"].strip().upper()
     start_date = data["start_date"]
     end_date = data["end_date"]
-    activity = data["activity"] 
+    activity = data["activity"]
     damaged = data["damaged"]
 
     activity_valid = ["RECEIVING-MUAT", "BONGKAR-DELIVERY", "SEMUA"]
@@ -126,7 +127,7 @@ def reports_info_container_list():
     if activity != "SEMUA":
         find_opt["activity"] = activity
     if damaged:
-        find_opt["damaged"] = True
+        find_opt["dammaged"] = True  # ada kesalahan nama pada database
 
     container_info_coll = mongo.db.container_info.find(
         find_opt).sort("created_at", 1)
@@ -139,21 +140,19 @@ def reports_info_container_list():
         container_info_list.append(container_info)
 
     if len(container_info_list) == 0:
-        return {"message": "data tidak ditemukan"}, 404
+        return {"message": "data tidak ditemukan"}, 204
 
     pdf_file_name = create_random_name()
 
     # MEMBUAT PDF START
     try:
-        pdf_info.generate_pdf(pdf_file_name, container_info_list, start_date, end_date)
+        pdf_info.generate_pdf(pdf_file_name, container_info_list,
+                              start_date, end_date, activity, damaged)
     except:
         return {"message": "Gagal membuat pdf!"}, 403
     # MEMBUAT PDF END
 
     return {"message": pdf_file_name}, 200
-
-
-
 
 
 def create_random_name():
@@ -165,4 +164,3 @@ def create_random_name():
 def random_string(stringLength):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(stringLength))
-

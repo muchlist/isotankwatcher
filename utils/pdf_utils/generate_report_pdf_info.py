@@ -10,7 +10,7 @@ from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
 
 
-def generate_pdf(pdf_name: str, data_info_list: list, start_date, end_date):
+def generate_pdf(pdf_name: str, data_info_list: list, start_date, end_date, activity, dammaged):
 
     # A4 = (210*mm,297*mm)
     path = Config.CUSTOM_REPORT_PATH
@@ -53,15 +53,21 @@ def generate_pdf(pdf_name: str, data_info_list: list, start_date, end_date):
     end_date_string = str(end_date.strftime("%d %B %Y")).upper()
 
     data = [
-        [f'PENGECEKAN PERIODE [{start_date_string}] s/d [{end_date_string}]'],
+        ['Tanggal Awal', f':     {start_date_string}'],
+        ['Tanggal Akhir', f':     {end_date_string}'],
+        ['Aktifitas', f':     {activity}'],
     ]
 
+    if dammaged:
+        data.append(
+            ['Kerusakan', ':     Tampilkan hanya yang rusak']
+        )
+
     tblstyle = TableStyle([
-        ('GRID', (0, 0), (0, 0), 0.25, colors.black),
-        ('ALIGN', (0, 0), (0, 0), 'LEFT')
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
     ])
 
-    tbl = Table(data, colWidths=[200*mm])
+    tbl = Table(data, colWidths=[40*mm, 160*mm])
     tbl.setStyle(tblstyle)
     story.append(tbl)
     story.append(Spacer(0, 5))
@@ -76,13 +82,14 @@ def generate_pdf(pdf_name: str, data_info_list: list, start_date, end_date):
     for i in range(len(data_info_list)):
 
         # mendapatkan posisi kerusakan
-        _position_and_status_damagged = get_position_damaged(data_info_list[i]["checkpoint_status"], data_info_list[i]["activity"])
+        _position_and_status_damagged = get_position_damaged(
+            data_info_list[i]["checkpoint_status"], data_info_list[i]["activity"])
         position_damage = _position_and_status_damagged[0]
         status_damage = _position_and_status_damagged[1]
         type_combo = f'{data_info_list[i]["tipe"]} {str(data_info_list[i]["size"])}'
         vessel_combo = f'{data_info_list[i]["vessel"]} {data_info_list[i]["voyage"]}'
         time = data_info_list[i]["created_at"].strftime(
-                         "%d %b %H:%M")
+            "%d %b %H:%M")
         container_number = data_info_list[i]["container_number"]
         activity = " - ".join(data_info_list[i]["activity"].split("-"))
 
@@ -152,6 +159,7 @@ def get_position_activity(activity, step):
 
     return position
 
+
 def get_position_damaged(checkpoint_status, activity) -> (str, str):
     nihil = "NIHIL"
     passed = "PASS"
@@ -170,6 +178,7 @@ def get_position_damaged(checkpoint_status, activity) -> (str, str):
         return [get_position_activity(activity, "four"), get_status(status_four)]
     else:
         return ["NIHIL", "NIHIL"]
+
 
 def get_status(status):
     if status == "":

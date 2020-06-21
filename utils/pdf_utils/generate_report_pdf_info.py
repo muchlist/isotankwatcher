@@ -170,11 +170,11 @@ def get_position_damaged(checkpoint_status, activity) -> (str, str):
 
     if not (status_one == "" or status_one == passed or nihil in status_one):
         return [get_position_activity(activity, "one"), get_status(status_one)]
-    elif not (status_two == "" or status_one == passed or nihil in status_two):
+    elif not (status_two == "" or status_two == passed or nihil in status_two):
         return [get_position_activity(activity, "two"), get_status(status_two)]
-    elif not (status_three == "" or status_one == passed or nihil in status_three):
+    elif not (status_three == "" or status_three == passed or nihil in status_three):
         return [get_position_activity(activity, "three"), get_status(status_three)]
-    elif not (status_four == "" or status_one == passed or nihil in status_four):
+    elif not (status_four == "" or status_four == passed or nihil in status_four):
         return [get_position_activity(activity, "four"), get_status(status_four)]
     else:
         return ["NIHIL", "NIHIL"]

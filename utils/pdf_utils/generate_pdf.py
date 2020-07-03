@@ -66,7 +66,7 @@ def generate_pdf(data_info, data_check):
         ["STATUS",  f': {data_info["full_or_empty"]}', nopol_title,
             nopol],
         ["AKTIFITAS",  f': {get_position_activity(data_check["container"]["activity"], data_check["position_step"])}',
-         "TANGGAL", f': {data_info["created_at"].strftime("%d %b %Y %H:%M")}']
+         "TANGGAL", f': {data_check["checked_at"].strftime("%d %b %Y %H:%M")}']
     ]
 
     tbl = Table(data, colWidths=[27*mm, 57*mm, 27*mm, 77*mm])
